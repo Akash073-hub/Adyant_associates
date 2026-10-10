@@ -1,27 +1,30 @@
-name: CI
+name: Node.js CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: ["ino"]
   pull_request:
-    branches: [main, master]
+    branches: ["ino"]
 
 permissions:
   contents: read
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [18.x, 20.x, 22.x]
+
+    defaults:
+      run:
+        working-directory: work
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -29,17 +32,12 @@ jobs:
           cache-dependency-path: work/package-lock.json
 
       - name: Install dependencies
-        working-directory: work
-        run: npm install
-
-      - name: Run lint (if configured)
-        working-directory: work
-        run: npm run lint || true
-
-      - name: Run tests
-        working-directory: work
-        run: npm test -- --ci --watchAll=false
+        run: npm ci
 
       - name: Build
-        working-directory: work
-        run: npm run build
+        run: npm run build --if-present
+
+      - name: Test
+        env:
+          CI: true
+        run: npm test -- --watch=false

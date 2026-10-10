@@ -2,38 +2,34 @@ import { useState } from 'react';
 import './home.css';
 
 const pillars = [
-  ['01 / Architecture', 'Zero-to-Architect Roadmaps', 'Progress from core language semantics to containerized Selenium Grids, parallel CI runners, and distributed cloud execution.'],
-  ['02 / Peer Review', 'Production Code Reviews', 'Every project submission is reviewed by Principal SDET mentors against clean code, DRY, and SOLID design criteria.'],
-  ['03 / Sandboxes', 'Live Enterprise Sandboxes', 'Test production-grade microservices, multi-tenant banking apps, and native iOS and Android simulators.'],
-  ['04 / Credentials', 'Verified SDET Credentials', 'Earn certificates recognized by hiring committees across Fortune 500 engineering departments and consultancies.'],
-  ['05 / AI Testing', 'GenAI & Autonomous QA', 'Integrate LLM test generation, visual regression models, and self-healing DOM selectors into your CI pipeline.'],
-  ['06 / Lifetime', 'Lifetime Access & Upgrades', 'Get permanent access to updated video modules, repositories, and new architectural templates with no subscription traps.'],
+  ['01 / AI LEADERSHIP', 'AI for QA Managers', 'Lead practical AI adoption across QA teams with responsible workflows, evaluation frameworks, and measurable quality outcomes.'],
+  ['02 / INTERVIEW READY', 'Interview Preparation Guide', 'Build a focused preparation plan for QA leadership and automation interviews with clear practice milestones.'],
+  ['03 / MOCK PRACTICE', 'Ready Mock Preparation', 'Rehearse realistic interview rounds, sharpen your answers, and get structured feedback before the real conversation.'],
 ];
 
 const courses = [
-  { type: 'TypeScript', hours: '40 Hours', title: 'Playwright TypeScript with GenAI Agent Automation', description: 'Build resilient end-to-end suites with Playwright, TypeScript, CI/CD GitHub Actions, and LLM-powered test generators.', rating: '4.9', alumni: '28,400', price: '$149', oldPrice: '$299', filter: 'Playwright' },
-  { type: 'Flagship',   hours: '80 Hours', title: 'Complete SDET: Selenium 4, Java & Architecture',      description: 'Core Java, data-driven and hybrid frameworks, TestNG, Docker Containers, Jenkins CI/CD, and Selenium Grid 4.',  rating: '4.9', alumni: '120,500', price: '$199', oldPrice: '$399', filter: 'Selenium 4' },
-  { type: 'Mobile QA', hours: '35 Hours', title: 'Mobile SDET: Appium 2.0 (iOS & Android)',             description: 'Native and hybrid application automation, cloud device testing, gestures, and CI mobile pipelines.',          rating: '4.8', alumni: '45,200',  price: '$139', oldPrice: '$279', filter: 'Appium Mobile' },
-  { type: 'Backend',   hours: '30 Hours', title: 'Full Stack API Automation: RestAssured & Postman',     description: 'REST, GraphQL, JSON Schema validation, JWT workflows, WireMock simulation, and contract testing.',           rating: '4.9', alumni: '65,800',  price: '$129', oldPrice: '$259', filter: 'RestAssured API' },
+  { type: 'Leadership', hours: 'Self-paced', title: 'AI for QA Managers', description: 'Adopt AI across quality operations with practical governance, team workflows, risk controls, and outcome-based implementation guidance.', rating: '5.0', alumni: 'New', price: 'Start', oldPrice: '', filter: 'AI for QA Managers' },
+  { type: 'Career Prep', hours: 'Self-paced', title: 'Interview Preparation Guide', description: 'Prepare for QA manager and automation leadership interviews with role-specific questions, frameworks, stories, and practice plans.', rating: '5.0', alumni: 'New', price: 'Start', oldPrice: '', filter: 'Interview Preparation Guide' },
+  { type: 'Practice', hours: 'Live interview', title: 'Ready Mock Preparation', description: 'Take a realistic mock interview with targeted questions, answer feedback, and a clear action plan for your next opportunity.', rating: '5.0', alumni: 'New', price: 'Book', oldPrice: '', filter: 'Ready Mock Preparation' },
 ];
 
 const batches = [
-  ['Playwright + GenAI SDET Masterclass',    'Production E2E Architecture',      'Oct 26, 2026', 'Sat & Sun',  '07:30 PM – 10:00 PM IST', '10:00 AM – 12:30 PM EST', 'Rahul Shetty', 'Ex-Staff SDET @ AWS',     '4 seats left',      'urgent'],
-  ['Selenium 4 Java SDET Pro Batch',         'Grid 4 & Framework Design',        'Nov 04, 2026', 'Mon – Thu',  '08:00 PM – 09:30 PM IST', '10:30 AM – 12:00 PM EST', 'Arun Kumar',   'Principal SDET @ Uber',   '8 seats remaining', 'soon'],
-  ['Appium 2.0 Mobile Testing Intensive',    'iOS & Android Real Device Cloud',  'Nov 15, 2026', 'Sat & Sun',  '06:00 PM – 08:30 PM IST', '08:30 AM – 11:00 AM EST', 'Sanjay Mehta', 'Staff Mobile Architect',  'Open Enrollment',   'open'],
+  ['AI for QA Managers', 'Practical AI leadership workshop', 'Oct 26, 2026', 'Sat & Sun', '07:30 PM – 10:00 PM IST', '10:00 AM – 12:30 PM EST', 'Ganapati Heregange, Gaurish Hebbar & Kiran Kodlekere', 'QA Lecturers', 'Open enrollment', 'open'],
+  ['Interview Preparation Guide', 'Role-focused preparation sessions', 'Nov 04, 2026', 'Mon – Thu', '08:00 PM – 09:30 PM IST', '10:30 AM – 12:00 PM EST', 'Ganapati Heregange', 'Interview Coach', 'Open enrollment', 'open'],
+  ['Ready Mock Preparation', 'Live mock interview practice', 'Nov 15, 2026', 'Sat & Sun', '06:00 PM – 08:30 PM IST', '08:30 AM – 11:00 AM EST', 'Ganapati Heregange, Gaurish Hebbar & Kiran Kodlekere', 'QA Lecturers', 'Book a mock', 'soon'],
 ];
 
 /* ── Code lines with line numbers ─────────────────────────────────────────── */
 const CODE_LINES = [
-  { n: '01', tokens: [{ t: 'kw', v: 'import' }, { t: '', v: ' { test, expect } ' }, { t: 'kw', v: 'from' }, { t: '', v: ' ' }, { t: 'str', v: "'@playwright/test'" }, { t: '', v: ';' }] },
-  { n: '02', tokens: [{ t: 'cm', v: '// Autonomous self-healing locator test suite' }] },
-  { n: '03', tokens: [{ t: 'fn', v: 'test' }, { t: '', v: '(' }, { t: 'str', v: "'enterprise auth & resilience flow'" }, { t: '', v: ', ' }, { t: 'kw', v: 'async' }, { t: '', v: ' ({ page, aiAgent }) => {' }] },
-  { n: '04', indent: true, tokens: [{ t: '', v: 'await page.' }, { t: 'cy', v: 'goto' }, { t: '', v: '(' }, { t: 'str', v: "'https://cloud.adyant.internal'" }, { t: '', v: ');' }] },
-  { n: '05', indent: true, tokens: [{ t: '', v: 'await aiAgent.' }, { t: 'cy', v: 'smartResolve' }, { t: '', v: '(' }, { t: 'str', v: "'#sso-login-input'" }, { t: '', v: ').' }, { t: 'cy', v: 'fill' }, { t: '', v: '(' }, { t: 'str', v: "'lead-sdet@corp.io'" }, { t: '', v: ');' }] },
-  { n: '06', indent: true, tokens: [{ t: 'kw', v: 'await' }, { t: '', v: ' page.' }, { t: 'cy', v: 'getByRole' }, { t: '', v: '(' }, { t: 'str', v: "'button'" }, { t: '', v: ", { name: " }, { t: 'str', v: "'Authenticate'" }, { t: '', v: ' }).' }, { t: 'cy', v: 'click' }, { t: '', v: '();' }] },
-  { n: '07', indent: true, tokens: [{ t: 'cm', v: '// Contract verification + Distributed tracing' }] },
-  { n: '08', indent: true, tokens: [{ t: 'kw', v: 'await' }, { t: '', v: ' ' }, { t: 'fn', v: 'expect' }, { t: '', v: '(page.' }, { t: 'cy', v: 'locator' }, { t: '', v: '(' }, { t: 'str', v: "'[data-test-id=metrics]'" }, { t: '', v: ')).' }, { t: 'cy', v: 'toBeVisible' }, { t: '', v: '();' }] },
-  { n: '09', indent: true, tokens: [{ t: 'kw', v: 'await' }, { t: '', v: ' aiAgent.' }, { t: 'cy', v: 'auditAccessibilityStandards' }, { t: '', v: '({ level: ' }, { t: 'str', v: "'WCAG-AA'" }, { t: '', v: ' });' }] },
+  { n: '01', tokens: [{ t: 'kw', v: 'import' }, { t: '', v: ' { qaAgent, expect } ' }, { t: 'kw', v: 'from' }, { t: '', v: ' ' }, { t: 'str', v: "'@adyant/ai-testing'" }, { t: '', v: ';' }] },
+  { n: '02', tokens: [{ t: 'cm', v: '// AI-assisted quality risk assessment' }] },
+  { n: '03', tokens: [{ t: 'fn', v: 'qaAgent' }, { t: '', v: '(' }, { t: 'str', v: "'release-readiness review'" }, { t: '', v: ', ' }, { t: 'kw', v: 'async' }, { t: '', v: ' ({ build, evidence }) => {' }] },
+  { n: '04', indent: true, tokens: [{ t: 'kw', v: 'const' }, { t: '', v: ' riskMap = ' }, { t: 'cy', v: 'analyzeQualityRisk' }, { t: '', v: '({ build, evidence });' }] },
+  { n: '05', indent: true, tokens: [{ t: 'kw', v: 'await' }, { t: '', v: ' qaAgent.' }, { t: 'cy', v: 'generateTestPlan' }, { t: '', v: '({ riskMap, priority: ' }, { t: 'str', v: "'critical'" }, { t: '', v: ' });' }] },
+  { n: '06', indent: true, tokens: [{ t: 'kw', v: 'await' }, { t: '', v: ' qaAgent.' }, { t: 'cy', v: 'validateAcceptanceCriteria' }, { t: '', v: '({ coverage: ' }, { t: 'str', v: "'regression'" }, { t: '', v: ' });' }] },
+  { n: '07', indent: true, tokens: [{ t: 'cm', v: '// Human review + AI-assisted coverage insights' }] },
+  { n: '08', indent: true, tokens: [{ t: 'kw', v: 'await' }, { t: '', v: ' ' }, { t: 'fn', v: 'expect' }, { t: '', v: '(riskMap.' }, { t: 'cy', v: 'criticalFindings' }, { t: '', v: ').' }, { t: 'cy', v: 'toBeWithinThreshold' }, { t: '', v: '(0);' }] },
+  { n: '09', indent: true, tokens: [{ t: 'kw', v: 'await' }, { t: '', v: ' qaAgent.' }, { t: 'cy', v: 'auditAccessibilityAndRisk' }, { t: '', v: '({ standard: ' }, { t: 'str', v: "'WCAG-AA'" }, { t: '', v: ' });' }] },
   { n: '10', tokens: [{ t: '', v: '});' }] },
 ];
 
@@ -43,19 +39,37 @@ function CodeToken({ t, v }) {
 }
 
 function CodePanel() {
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  function handlePointerMove(event) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+    const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+    setTilt({ x: y * -8, y: x * 8 });
+  }
+
+  function resetTilt() {
+    setTilt({ x: 0, y: 0 });
+  }
+
   return (
-    <div className="code-panel">
+    <div
+      className="code-panel"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetTilt}
+      style={{ '--tilt-x': `${tilt.x}deg`, '--tilt-y': `${tilt.y}deg` }}
+    >
       {/* Window bar */}
       <div className="window-bar">
         <div className="window-left">
           <span className="wdot" /><span className="wdot" /><span className="wdot" />
           <span className="window-filename">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            enterprise-sdet-spec.ts
+            ai-qa-release-review.ts
           </span>
         </div>
         <div className="window-right">
-          <span className="code-tag">Playwright + AI</span>
+          <span className="code-tag">AI Testing + QA</span>
           <span className="wdot wdot-green" />
         </div>
       </div>
@@ -81,18 +95,22 @@ function CodePanel() {
           <span className="cf-sep">|</span>
           <span>0 flaky</span>
         </div>
-        <span className="cf-right">Duration: 840ms on Grid</span>
+        <span className="cf-right">Preparation plan ready</span>
       </div>
     </div>
   );
 }
 
 function Home() {
-  const [filter, setFilter]       = useState('All Tracks');
+  const [filter, setFilter]       = useState('All Programs');
+  const [search, setSearch]       = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   const visibleCourses =
-    filter === 'All Tracks' ? courses : courses.filter((c) => c.filter === filter);
+    filter === 'All Programs' ? courses : courses.filter((c) => c.filter === filter);
+  const searchedCourses = visibleCourses.filter((course) =>
+    `${course.title} ${course.description} ${course.type}`.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <div className="site-shell">
@@ -102,29 +120,24 @@ function Home() {
         <a className="brand" href="/">
           <span className="brand-mark">A</span>
           <span>
-            <strong>adyant<span className="accent">.</span>pro</strong>
-            <small>Associates</small>
+            <strong>Adyant AI QA</strong>
           </span>
         </a>
 
         <nav>
           <a className="active" href="/">Home</a>
           <a href="#courses">Courses</a>
-          <a href="/membership">Membership</a>
-          <a href="#sandboxes">
-            Practice Sandboxes
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{marginLeft:4,verticalAlign:'middle'}}><path d="m6 9 6 6 6-6"/></svg>
-          </a>
+          <a href="/membership">Programs</a>
+          <a href="#batches">Mock Interviews</a>
         </nav>
 
         <div className="header-actions">
-          <button className="search-button" type="button">
+          <label className="search-button">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            Search courses...
-            <kbd>⌘K</kbd>
-          </button>
+            <input aria-label="Search programs" onChange={(event) => setSearch(event.target.value)} placeholder="Search programs..." type="search" value={search} />
+          </label>
           <a href="/login">Member Login</a>
-          <a className="dark-button compact" href="/membership">Buy Now</a>
+          <a className="dark-button compact" href="#batches">Book Your Mock Interview</a>
         </div>
       </header>
 
@@ -135,40 +148,35 @@ function Home() {
           <div className="hero-copy">
             <div className="eyebrow">
               <span className="eyebrow-dot" />
-              SDET &amp; AUTOMATION ENGINEERING ARCHITECTURE
+              AI-POWERED QA CAREER DEVELOPMENT
             </div>
 
             <h1>
-              The next-generation{' '}
-              <em>SDET career</em>{' '}
-              platform.
+              Build confidence for your{' '}
+              <em>next QA opportunity</em>.
             </h1>
 
             <p>
-              Rigorous, live instructor-led bootcamps built for engineers transitioning to
-              Principal SDET roles. Master Playwright, Selenium 4, Appium 2.0, Distributed
-              Docker Grids, and GenAI test synthesis.
+              Focused learning and interview support for QA managers and quality engineers.
+              Learn how to lead with AI, prepare strategically, and practice with realistic mock interviews.
             </p>
 
             <div className="hero-actions">
-              <a className="blue-button" href="#courses">Explore Courses →</a>
-              <a className="outline-button" href="#batches">
-                <span className="pulse" /> View Live Batches
-              </a>
+              <a className="blue-button" href="#courses">Explore Programs →</a>
             </div>
 
             <div className="metrics">
               <div>
-                <strong>500k+</strong>
-                <span>Engineers Trained</span>
+                <strong>3</strong>
+                <span>Focused programs</span>
               </div>
               <div>
-                <strong>40+</strong>
-                <span>Specialized Tracks</span>
+                <strong>1:1</strong>
+                <span>Mock interview support</span>
               </div>
               <div>
-                <strong>4.9<small> / 5.0</small></strong>
-                <span>Industry Rating</span>
+                <strong>100%</strong>
+                <span>Practical guidance</span>
               </div>
             </div>
           </div>
@@ -176,20 +184,20 @@ function Home() {
           <div className="hero-code">
             <CodePanel />
             <p className="commit">
-              ⌁ commit <b>8f21bc9</b> — Updated to Playwright 1.45 + GenAI
-              <span>Dockerized Grid v4.2</span>
+              ⌁ guide <b>QA-AI-01</b> — Updated for practical AI leadership
+              <span>Interview support ready</span>
             </p>
           </div>
         </section>
 
         {/* ── VALUE PILLARS ── */}
-        <section className="content-section" id="sandboxes">
+        <section className="content-section" id="support">
           <div className="section-heading">
             <div>
-              <span className="section-label">Architecture Standards</span>
-              <h2>Engineering Excellence Built for Global Tech Teams</h2>
+              <span className="section-label">How We Help</span>
+              <h2>Practical support for your next career move</h2>
             </div>
-            <p>We strip away non-essential fluff to deliver pure enterprise framework design, cloud execution, and distributed test orchestration.</p>
+            <p>Choose the focused support you need, from AI leadership guidance to interview preparation and live mock practice.</p>
           </div>
           <div className="pillar-grid">
             {pillars.map(([label, title, text]) => (
@@ -207,12 +215,12 @@ function Home() {
         <section className="content-section courses-section" id="courses">
           <div className="section-heading course-heading">
             <div>
-              <span className="section-label">Core Programs</span>
-              <h2>Specialized SDET Curriculums</h2>
-              <p>Deep, comprehensive engineering tracks built for hands-on code execution.</p>
+              <span className="section-label">Our Three Programs</span>
+              <h2>Choose the right next step</h2>
+              <p>Clear, focused resources without extra courses or distractions.</p>
             </div>
             <div className="filters">
-              {['All Tracks', 'Playwright', 'Selenium 4', 'Appium Mobile', 'RestAssured API'].map((name) => (
+              {['All Programs', ...courses.map((course) => course.filter)].map((name) => (
                 <button
                   className={filter === name ? 'selected' : ''}
                   key={name}
@@ -226,7 +234,7 @@ function Home() {
           </div>
 
           <div className="course-grid">
-            {visibleCourses.map((course) => (
+            {searchedCourses.map((course) => (
               <article className="course-card" key={course.title}>
                 <div className="course-main">
                   <div className="course-meta">
@@ -235,6 +243,7 @@ function Home() {
                     </span>
                     <span>{course.hours}</span>
                   </div>
+                  {searchedCourses.length === 0 && <p className="search-empty">No programs match “{search}”.</p>}
                   <h3>{course.title}</h3>
                   <p>{course.description}</p>
                   <div className="rating">
@@ -248,8 +257,7 @@ function Home() {
                   </div>
                   <span className="discount">50% OFF</span>
                   <div className="card-actions">
-                    <button type="button">Syllabus</button>
-                    <button className="dark-button" type="button">Enroll</button>
+                    <a className="dark-button" href={course.title === 'Ready Mock Preparation' ? '/checkout' : '#assessment'}>{course.title === 'Ready Mock Preparation' ? 'Book' : 'Start'}</a>
                   </div>
                 </div>
               </article>
@@ -261,13 +269,10 @@ function Home() {
         <section className="content-section batches-section" id="batches">
           <div className="section-heading">
             <div>
-              <span className="section-label">Live Cohorts</span>
-              <h2>Upcoming Instructor-Led Schedules</h2>
-              <p>Limited to 35 engineers per cohort for direct 1-on-1 code mentorship.</p>
+              <span className="section-label">Mock Interview Booking</span>
+                <h2>Book your mock interview</h2>
+                <p>Choose a preparation path, then practice with an interviewer who gives direct, useful feedback.</p>
             </div>
-            <span className="timezone">
-              <i /> Timezones synchronized with EST &amp; IST
-            </span>
           </div>
 
           <div className="table-wrap">
@@ -275,11 +280,11 @@ function Home() {
               <thead>
                 <tr>
                   <th>Cohort Program</th>
-                  <th>Start &amp; Cadence</th>
+                  <th>Format</th>
                   <th>Session Timings</th>
                   <th>Lead Mentor</th>
                   <th>Capacity</th>
-                  <th>Reservation</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -310,7 +315,9 @@ function Home() {
                       <span className={`capacity ${status}`}>{capacity}</span>
                     </td>
                     <td>
-                      <button className="dark-button" type="button">Book Seat</button>
+                      <button className="dark-button" type="button">
+                        {status === 'open' ? 'Book session' : 'Book Your Mock'}
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -321,19 +328,19 @@ function Home() {
 
         {/* ── SOCIAL PROOF ── */}
         <section className="social-proof content-section">
-          <div className="logo-strip">
-            {['GOOGLE','AMAZON','MICROSOFT','CAPGEMINI','INFOSYS','DELOITTE','COGNIZANT'].map((n) => (
-              <span key={n}>{n}</span>
-            ))}
-          </div>
+          <div className="logo-strip">Trusted QA learning community</div>
           <div className="trust">
-            4.8 / 5.0 <span>★★★★★</span> — Verified by 18,000+ test engineers on Google Reviews
+          Three focused programs <span>★</span> — practical support for QA career growth
           </div>
-          <div className="testimonial-grid">
+          <div className="testimonial-marquee">
+            <div className="testimonial-track">
             {[
-              ['01 // CAREER PIVOT',       'I was stuck in manual testing for 5 years with zero Java coding knowledge. The step-by-step guidance helped me crack a Senior SDET role with an 85% salary jump!', 'Priyanka Kulkarni', 'Senior SDET ($135K)'],
-              ['02 // ENTERPRISE VALUE',    'Adyant Associates is the gold standard for test automation. The lifetime membership is literally the highest ROI investment I have ever made.',                       'David Miller',      'Lead QA Architect @ FinTech'],
-              ['03 // ARCHITECTURE DEPTH', 'The practical sandboxes and live real-world frameworks made all the difference. Every design question was something we had already built in class.',               'Ananya Sen',        'SDET II @ Tier-1 Cloud Enterprise'],
+              ['01 // CAREER PIVOT',       'The interview preparation guide helped me organize my experience and approach my next QA leadership interview with confidence.', 'Harsha Puranik', 'QA Manager Candidate'],
+              ['02 // INTERVIEW READY',    'The focused guidance made difficult interview questions easier to answer with clear examples and practical structure.', 'Vani Bhat', 'Quality Engineering Candidate'],
+              ['03 // MOCK CONFIDENCE', 'The live mock interview gave me clear, honest feedback and a practical plan for answering difficult QA leadership questions.', 'Suresh Reddy', 'QA Manager Candidate'],
+              ['01 // CAREER PIVOT',       'The interview preparation guide helped me organize my experience and approach my next QA leadership interview with confidence.', 'Harsha Puranik', 'QA Manager Candidate'],
+              ['02 // INTERVIEW READY',    'The focused guidance made difficult interview questions easier to answer with clear examples and practical structure.', 'Vani Bhat', 'Quality Engineering Candidate'],
+              ['03 // MOCK CONFIDENCE', 'The live mock interview gave me clear, honest feedback and a practical plan for answering difficult QA leadership questions.', 'Suresh Reddy', 'QA Manager Candidate'],
             ].map(([label, quote, name, role]) => (
               <article className="testimonial" key={label}>
                 <span className="testimonial-label">{label}</span>
@@ -347,6 +354,7 @@ function Home() {
                 </footer>
               </article>
             ))}
+            </div>
           </div>
         </section>
 
@@ -360,7 +368,7 @@ function Home() {
               <h2>Assess Your Automation Readiness</h2>
               <p>
                 Identify your testing skill gaps, receive a personalized learning roadmap,
-                and unlock <b>up to 30% scholarship</b> on upcoming cohorts.
+                and choose the right preparation path for your next interview.
               </p>
             </div>
 
@@ -368,7 +376,7 @@ function Home() {
               <Question title="1. What is your current technical role?" name="role"
                 options={['Manual QA / Functional Tester', 'Junior QA Automation', 'Developer transitioning to SDET']} />
               <Question title="2. Which testing stack do you want to master first?" name="stack"
-                options={['Playwright + AI', 'Selenium 4 + Java', 'Appium 2.0 Mobile', 'REST & GraphQL API']} />
+                options={['AI for QA Managers', 'Interview Preparation Guide', 'Ready Mock Preparation']} />
               <Question title="3. What is your career goal for the next 6-12 months?" name="goal"
                 options={['Switch from Manual to SDET', 'Promoted to Lead / Architect', 'Secure Global Remote Offer']} />
 
@@ -389,21 +397,21 @@ function Home() {
           <div className="footer-brand">
             <a className="brand" href="#top">
               <span className="brand-mark">A</span>
-              <strong>adyantassociates<span className="accent">.</span>com</strong>
+              <strong>Adyant AI QA</strong>
             </a>
-            <p>The premier global engineering academy and professional collective for Software Development Engineers in Test by Adyant Associates.</p>
-            <label>SDET ARCHITECTURE DISPATCH</label>
+            <p>Focused AI leadership and interview preparation support for QA managers and quality engineers.</p>
+            <label>QA CAREER DISPATCH</label>
             <div className="subscribe">
-              <input aria-label="Work email" placeholder="work-email@company.com" type="email" />
+              <input aria-label="Work email" placeholder="you@example.com" type="email" />
               <button type="button">Join</button>
             </div>
           </div>
-          <FooterColumn title="Curriculum"  links={['Playwright TypeScript','Selenium 4 Java Grid','Appium 2.0 Mobile','RestAssured API Suite','Cypress Modern E2E','GenAI for Automation']} />
-          <FooterColumn title="Sandboxes"   links={['Banking Web Sandbox','Mobile E-Commerce App','Mock REST API Endpoints','SDET Coding Challenges','GitHub Framework Starters']} />
-          <FooterColumn title="Enterprise"  links={['Team & Corporate LMS','Lifetime Membership','Verify Credential ID','Enterprise Syllabus (PDF)','Security & Compliance']} />
+          <FooterColumn title="Programs" links={['AI for QA Managers','Interview Preparation Guide','Ready Mock Preparation']} />
+          <FooterColumn title="Interview Support" links={['Book your mock interview','Preparation checklist','Feedback and next steps']} />
+          <FooterColumn title="Support" links={['About the programs','Contact support','Privacy and security']} />
         </div>
         <div className="footer-bottom">
-          © 2026 Adyant Associates Academy Inc. All rights reserved.
+          © 2026 Adyant AI QA. All rights reserved.
           <span>Privacy Policy　 Terms of Service　 Refund Terms　 System Status</span>
         </div>
       </footer>

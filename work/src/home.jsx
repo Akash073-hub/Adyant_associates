@@ -257,6 +257,7 @@ function Home() {
                   </div>
                   <span className="discount">50% OFF</span>
                   <div className="card-actions">
+                    <a className="syllabus-button" href={course.title === 'AI for QA Managers' ? '/syllabus/ai-for-qa-managers' : '#assessment'}>Syllabus</a>
                     <a className="dark-button" href={course.title === 'Ready Mock Preparation' ? '/checkout' : '#assessment'}>{course.title === 'Ready Mock Preparation' ? 'Book' : 'Start'}</a>
                   </div>
                 </div>

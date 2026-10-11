@@ -1,0 +1,102 @@
+.syllabus-page {
+  min-height: 100vh;
+  background: #f7f7f8;
+  color: #09090b;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.syllabus-header {
+  height: 64px;
+  padding: 0 max(24px, calc((100% - 1216px) / 2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.syllabus-brand {
+  font-weight: 700;
+}
+
+.syllabus-back {
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.syllabus-content {
+  width: min(100% - 48px, 860px);
+  margin: 0 auto;
+  padding: 88px 0;
+}
+
+.syllabus-label {
+  color: #2563eb;
+  font: 700 11px 'JetBrains Mono', monospace;
+  letter-spacing: .1em;
+}
+
+.syllabus-content h1 {
+  max-width: 760px;
+  margin: 18px 0 12px;
+  font-size: clamp(34px, 5vw, 58px);
+  line-height: 1.08;
+  letter-spacing: -.05em;
+}
+
+.syllabus-source {
+  margin: 0 0 36px;
+  color: #71717a;
+}
+
+.syllabus-card {
+  padding: 32px;
+  background: #fff;
+  border: 1px solid #e4e4e7;
+  border-radius: 14px;
+  box-shadow: 0 20px 40px -24px rgba(15, 23, 42, .25);
+}
+
+.syllabus-card h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+}
+
+.syllabus-card > p {
+  color: #52525b;
+  line-height: 1.7;
+}
+
+.syllabus-topics {
+  margin: 28px 0;
+  color: #27272a;
+  line-height: 1.7;
+}
+
+.syllabus-topics p {
+  margin: 10px 0;
+}
+
+.syllabus-button {
+  display: inline-block;
+  padding: 13px 20px;
+  border-radius: 7px;
+  background: #09090b;
+  color: #fff;
+  font-weight: 700;
+}
+
+.syllabus-button:hover {
+  background: #2563eb;
+}
+
+@media (max-width: 640px) {
+  .syllabus-content {
+    padding: 56px 0;
+  }
+
+  .syllabus-card {
+    padding: 24px;
+  }
+}

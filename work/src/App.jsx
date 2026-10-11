@@ -3,11 +3,13 @@ import Home from './home';
 import SignIn from './signin';
 import Membership from './membership';
 import Checkout from './checkout';
+import Syllabus from './syllabus';
 
 function App() {
   const isLoginPage = window.location.pathname === '/login';
   const isMembershipPage = window.location.pathname === '/membership';
   const isCheckoutPage = window.location.pathname === '/checkout';
+  const isAiQaSyllabusPage = window.location.pathname === '/syllabus/ai-for-qa-managers';
   const navigate = (path) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -16,6 +18,7 @@ function App() {
   if (isLoginPage) return <SignIn onNavigate={navigate} />;
   if (isMembershipPage) return <Membership />;
   if (isCheckoutPage) return <Checkout />;
+  if (isAiQaSyllabusPage) return <Syllabus />;
   return <Home />;
 }
 

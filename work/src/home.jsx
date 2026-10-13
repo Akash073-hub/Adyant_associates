@@ -120,14 +120,14 @@ function Home() {
         <a className="brand" href="/">
           <span className="brand-mark">A</span>
           <span>
-            <strong>Adyant AI QA</strong>
+            <strong>Adyant Associates</strong>
           </span>
         </a>
 
         <nav>
           <a className="active" href="/">Home</a>
           <a href="#courses">Courses</a>
-          <a href="/#courses">Programs</a>
+          <a href="/membership">Memberships</a>
           <a href="#batches">Mock Interviews</a>
           <a href="/support">Support</a>
         </nav>
@@ -399,7 +399,7 @@ function Home() {
           <div className="footer-brand">
             <a className="brand" href="#top">
               <span className="brand-mark">A</span>
-              <strong>Adyant AI QA</strong>
+              <strong>Adyant Associates</strong>
             </a>
             <p>Focused AI leadership and interview preparation support for QA managers and quality engineers.</p>
             <label>QA CAREER DISPATCH</label>
@@ -413,7 +413,7 @@ function Home() {
           <FooterColumn title="Support" links={['About the programs','Contact support','Privacy and security']} />
         </div>
         <div className="footer-bottom">
-          © 2026 Adyant AI QA. All rights reserved.
+          © 2026 Adyant Associates. All rights reserved.
           <span><a href="/support">Privacy &amp; Support</a>　 Terms of Service　 Refund Terms　 System Status</span>
         </div>
       </footer>

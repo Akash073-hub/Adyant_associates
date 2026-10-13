@@ -4,7 +4,7 @@ function Syllabus() {
   return (
     <div className="syllabus-page">
       <header className="syllabus-header">
-        <a className="syllabus-brand" href="/">Adyant AI QA</a>
+        <a className="syllabus-brand" href="/">Adyant Associates</a>
         <a className="syllabus-back" href="/">← Back to courses</a>
       </header>
 

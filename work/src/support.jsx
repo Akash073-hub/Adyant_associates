@@ -94,12 +94,13 @@ function Support() {
       <header className="support-header">
         <a className="brand" href="/">
           <span className="brand-mark">A</span>
-          <strong>Adyant AI QA</strong>
+          <strong>Adyant Associates</strong>
         </a>
         <nav>
           <a href="/">Home</a>
-          <a href="/#courses">Courses</a>
-          <a className="active" href="/support">Privacy &amp; Support</a>
+          <a href="/membership">Memberships</a>
+          <a href="/#batches">Mock Interviews</a>
+          <a className="active" href="/support">Support</a>
         </nav>
         <a className="dark-button compact" href={`mailto:${SUPPORT_EMAIL}`}>Email support</a>
       </header>
@@ -108,7 +109,7 @@ function Support() {
         <section className="support-hero">
           <span className="support-label">Support desk / Privacy</span>
           <h1>Clear answers, thoughtful support.</h1>
-          <p>Use the chatbot for quick guidance, or contact a real person whenever you need more help with Adyant AI QA.</p>
+          <p>Use the chatbot for quick guidance, or contact a real person whenever you need more help with Adyant Associates.</p>
           <a className="support-email" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL} ↗</a>
         </section>
 
@@ -132,7 +133,7 @@ function Support() {
       </main>
 
       <footer className="support-footer">
-        <span>© 2026 Adyant AI QA</span>
+        <span>© 2026 Adyant Associates</span>
         <a href="/">Back to home</a>
       </footer>
     </div>

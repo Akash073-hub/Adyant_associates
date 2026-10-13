@@ -127,8 +127,9 @@ function Home() {
         <nav>
           <a className="active" href="/">Home</a>
           <a href="#courses">Courses</a>
-          <a href="/membership">Programs</a>
+          <a href="/#courses">Programs</a>
           <a href="#batches">Mock Interviews</a>
+          <a href="/support">Support</a>
         </nav>
 
         <div className="header-actions">
@@ -413,7 +414,7 @@ function Home() {
         </div>
         <div className="footer-bottom">
           © 2026 Adyant AI QA. All rights reserved.
-          <span>Privacy Policy　 Terms of Service　 Refund Terms　 System Status</span>
+          <span><a href="/support">Privacy &amp; Support</a>　 Terms of Service　 Refund Terms　 System Status</span>
         </div>
       </footer>
     </div>
@@ -440,7 +441,24 @@ function FooterColumn({ title, links }) {
   return (
     <div className="footer-column">
       <h4>{title}</h4>
-      {links.map((link) => <a href="#top" key={link}>{link}</a>)}
+      {links.map((link) => (
+        <a
+          href={
+            link === 'Book your mock interview'
+              ? '/checkout'
+              : link === 'Preparation checklist'
+                ? '#courses'
+                : link === 'Contact support' || link === 'Privacy and security'
+              ? '/support'
+              : link === 'Feedback and next steps'
+                ? '#membership'
+                : '#top'
+          }
+          key={link}
+        >
+          {link}
+        </a>
+      ))}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './support.css';
+import SiteNav from './site-nav';
 
 const SUPPORT_EMAIL = 'akashrbhat73@gmail.com';
 const courses = [
@@ -91,19 +92,7 @@ function Chatbot() {
 function Support() {
   return (
     <div className="support-page">
-      <header className="support-header">
-        <a className="brand" href="/">
-          <span className="brand-mark">A</span>
-          <strong>Adyant Associates</strong>
-        </a>
-        <nav>
-          <a href="/">Home</a>
-          <a href="/membership">Memberships</a>
-          <a href="/#batches">Mock Interviews</a>
-          <a className="active" href="/support">Support</a>
-        </nav>
-        <a className="dark-button compact" href={`mailto:${SUPPORT_EMAIL}`}>Email support</a>
-      </header>
+      <SiteNav active="support" coursesHref="/membership#curriculum" mockHref="/#batches" ctaHref={`mailto:${SUPPORT_EMAIL}`} ctaLabel="Email support" showCta />
 
       <main>
         <section className="support-hero">

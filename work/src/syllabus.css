@@ -87,8 +87,12 @@
   font-weight: 700;
 }
 
-.syllabus-button:hover {
-  background: #2563eb;
+.syllabus-button:hover,
+.syllabus-button:focus-visible {
+  color: #fff;
+  background: #09090b;
+  box-shadow: none;
+  outline: none;
 }
 
 @media (max-width: 640px) {

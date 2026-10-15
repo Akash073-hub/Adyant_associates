@@ -1,12 +1,10 @@
 import './syllabus.css';
+import SiteNav from './site-nav';
 
 function Syllabus() {
   return (
     <div className="syllabus-page">
-      <header className="syllabus-header">
-        <a className="syllabus-brand" href="/">Adyant Associates</a>
-        <a className="syllabus-back" href="/">← Back to courses</a>
-      </header>
+      <SiteNav active="courses" coursesHref="/membership#curriculum" mockHref="/#batches" ctaHref="/checkout" />
 
       <main className="syllabus-content">
         <span className="syllabus-label">AI FOR QA MANAGERS // SYLLABUS</span>

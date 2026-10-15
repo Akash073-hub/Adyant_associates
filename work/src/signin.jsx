@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import './signin.css';
+import SiteNav from './site-nav';
 
-function SignIn({ onNavigate }) {
+function SignIn() {
   const [authenticated, setAuthenticated] = useState(false);
 
   function handleSubmit(event) {
@@ -11,22 +12,7 @@ function SignIn({ onNavigate }) {
 
   return (
     <div className="signin-page">
-      <header className="signin-header">
-        <div className="signin-header-inner">
-          <div className="signin-brand-group">
-            <button className="signin-brand" type="button" onClick={() => onNavigate('/')}>
-              <span className="signin-brand-mark">A</span>
-              <span>ADYANT AI QA</span>
-            </button>
-            <span className="signin-divider" />
-            <button className="back-home" type="button" onClick={() => onNavigate('/')}>
-              <span aria-hidden="true">←</span> Back to Homepage
-            </button>
-          </div>
-          <nav className="signin-nav"><a href="#courses">Courses</a><a href="#support">Help Desk / Support</a></nav>
-          <div className="security-badge"><span /> <span className="security-full">Enterprise SSO &amp; 256-bit Encrypted Session</span><span className="security-short">256-bit SSL</span></div>
-        </div>
-      </header>
+      <SiteNav active="" coursesHref="/membership#curriculum" mockHref="/#batches" ctaHref="/checkout" showLogin={false} />
 
       <main className="signin-main">
         <div className="signin-wrap">
@@ -42,7 +28,6 @@ function SignIn({ onNavigate }) {
               <button className="authenticate-button" type="submit"><span aria-hidden="true">▣</span> {authenticated ? 'Authenticated — Portal Ready' : 'Authenticate & Enter Portal →'}</button>
             </form>
           </section>
-          <p className="enrollment-note">Need help choosing a program? Contact <a href="mailto:support@adyantassociates.com">support@adyantassociates.com</a></p>
         </div>
       </main>
 

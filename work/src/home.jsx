@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './home.css';
+import SiteNav from './site-nav';
 
 const pillars = [
   ['01 / AI LEADERSHIP', 'AI for QA Managers', 'Lead practical AI adoption across QA teams with responsible workflows, evaluation frameworks, and measurable quality outcomes.'],
@@ -115,32 +116,7 @@ function Home() {
   return (
     <div className="site-shell">
 
-      {/* ── HEADER ── */}
-      <header className="site-header">
-        <a className="brand" href="/">
-          <span className="brand-mark">A</span>
-          <span>
-            <strong>Adyant Associates</strong>
-          </span>
-        </a>
-
-        <nav>
-          <a className="active" href="/">Home</a>
-          <a href="#courses">Courses</a>
-          <a href="/membership">Memberships</a>
-          <a href="#batches">Mock Interviews</a>
-          <a href="/support">Support</a>
-        </nav>
-
-        <div className="header-actions">
-          <label className="search-button">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input aria-label="Search programs" onChange={(event) => setSearch(event.target.value)} placeholder="Search programs..." type="search" value={search} />
-          </label>
-          <a href="/login">Member Login</a>
-          <a className="dark-button compact" href="#batches">Book Your Mock Interview</a>
-        </div>
-      </header>
+      <SiteNav active="home" searchValue={search} onSearchChange={(event) => setSearch(event.target.value)} />
 
       <main id="top">
 
@@ -259,7 +235,7 @@ function Home() {
                   <span className="discount">50% OFF</span>
                   <div className="card-actions">
                     <a className="syllabus-button" href={course.title === 'AI for QA Managers' ? '/syllabus/ai-for-qa-managers' : '#assessment'}>Syllabus</a>
-                    <a className="dark-button" href={course.title === 'Ready Mock Preparation' ? '/checkout' : '#assessment'}>{course.title === 'Ready Mock Preparation' ? 'Book' : 'Start'}</a>
+                    <a className="dark-button" href={course.title === 'Ready Mock Preparation' ? '/membership#curriculum' : '#assessment'}>{course.title === 'Ready Mock Preparation' ? 'Book' : 'Start'}</a>
                   </div>
                 </div>
               </article>
@@ -317,9 +293,9 @@ function Home() {
                       <span className={`capacity ${status}`}>{capacity}</span>
                     </td>
                     <td>
-                      <button className="dark-button" type="button">
+                      <a className="dark-button" href="/membership#curriculum">
                         {status === 'open' ? 'Book session' : 'Book Your Mock'}
-                      </button>
+                      </a>
                     </td>
                   </tr>
                 ))}
@@ -445,7 +421,7 @@ function FooterColumn({ title, links }) {
         <a
           href={
             link === 'Book your mock interview'
-              ? '/checkout'
+              ? '/membership#curriculum'
               : link === 'Preparation checklist'
                 ? '#courses'
                 : link === 'Contact support' || link === 'Privacy and security'

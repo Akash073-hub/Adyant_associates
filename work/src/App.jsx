@@ -1,4 +1,5 @@
 import './App.css';
+import './site-nav.css';
 import Home from './home';
 import SignIn from './signin';
 import Membership from './membership';
@@ -12,12 +13,7 @@ function App() {
   const isCheckoutPage = window.location.pathname === '/checkout';
   const isAiQaSyllabusPage = window.location.pathname === '/syllabus/ai-for-qa-managers';
   const isSupportPage = ['/support', '/privacy'].includes(window.location.pathname);
-  const navigate = (path) => {
-    window.history.pushState({}, '', path);
-    window.dispatchEvent(new PopStateEvent('popstate'));
-  };
-
-  if (isLoginPage) return <SignIn onNavigate={navigate} />;
+  if (isLoginPage) return <SignIn />;
   if (isMembershipPage) return <Membership />;
   if (isCheckoutPage) return <Checkout />;
   if (isAiQaSyllabusPage) return <Syllabus />;

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './membership.css';
+import SiteNav from './site-nav';
 
 const principles = [
   ['01 // AI LEADERSHIP', 'AI for QA Managers', 'Learn how to introduce AI into quality workflows with practical governance, adoption planning, and measurable team outcomes.', 'AI strategy • Governance • Team enablement'],
@@ -27,7 +28,7 @@ function Membership() {
     `${title} ${text} ${tags.join(' ')}`.toLowerCase().includes(search.toLowerCase()),
   );
   return <div className="courses-page">
-    <header className="courses-header"><div className="courses-header-inner"><a className="courses-brand" href="/"><span /> Adyant Associates</a><nav><a href="/">Home</a><a className="active" href="/membership">Memberships</a><a href="/#batches">Mock Interviews</a><a href="/support">Support</a></nav><div className="courses-tools"><label className="program-search">⌕ <input aria-label="Search programs" onChange={(event) => setSearch(event.target.value)} placeholder="Search programs..." type="search" value={search} /></label></div></div></header>
+    <SiteNav active="memberships" coursesHref="/membership#curriculum" mockHref="/#batches" ctaHref="/checkout" searchValue={search} onSearchChange={(event) => setSearch(event.target.value)} />
     <main id="top">
       <section className="courses-hero"><div className="courses-inner"><div className="courses-tag"><span /> {'// QA LEADERSHIP & INTERVIEW SUPPORT'}</div><h1>Focused preparation.<br /><em>Confident performance.</em></h1><p>Choose from three focused programs designed to help QA managers and quality engineers lead with AI, prepare for interviews, and practice with expert feedback.</p><div className="course-metrics"><Metric label="PROGRAMS" value="3" text="Focused offerings" /><Metric label="PRACTICE" value="1:1" text="Mock interview support" /><Metric label="GUIDANCE" value="100%" text="Action-oriented" /><Metric label="BOOKING" value="OPEN" text="Reserve your mock" /></div></div></section>
       <section className="courses-section pedagogy-section" id="pedagogy"><SectionIntro label="01 // PEDAGOGICAL FRAMEWORK — HOW WE TEACH" title="Engineering Rigor Over Superficial Tutorials" text="We bridge the gap between superficial tutorial scripts and resilient enterprise frameworks through five core architectural disciplines." /><div className="principles-grid">{principles.map(([label, title, text, footer], index) => <article className={`principle principle-${index}`} key={title}><span className="principle-label">{label}</span><h3>{title}</h3><p>{text}</p><footer>⌁ {footer}</footer></article>)}</div></section>

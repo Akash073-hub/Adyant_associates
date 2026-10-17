@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './home.css';
 import SiteNav from './site-nav';
+import { focusSearchTarget, getSearchQuery } from './search-navigation';
 
 const pillars = [
   ['01 / AI LEADERSHIP', 'AI for QA Managers', 'Lead practical AI adoption across QA teams with responsible workflows, evaluation frameworks, and measurable quality outcomes.'],
@@ -107,6 +108,15 @@ function Home() {
   const [search, setSearch]       = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  useEffect(() => {
+    const query = getSearchQuery();
+    if (query) setSearch(query);
+  }, []);
+
+  useEffect(() => {
+    focusSearchTarget(search);
+  }, [search]);
+
   const visibleCourses =
     filter === 'All Programs' ? courses : courses.filter((c) => c.filter === filter);
   const searchedCourses = visibleCourses.filter((course) =>
@@ -212,7 +222,7 @@ function Home() {
 
           <div className="course-grid">
             {searchedCourses.map((course) => (
-              <article className="course-card" key={course.title}>
+              <article className="course-card" id={`course-${course.filter.toLowerCase().replaceAll(' ', '-')}`} key={course.title} tabIndex={-1}>
                 <div className="course-main">
                   <div className="course-meta">
                     <span className={course.type === 'Flagship' ? 'badge blue-badge' : 'badge'}>
@@ -305,7 +315,7 @@ function Home() {
         </section>
 
         {/* ── SOCIAL PROOF ── */}
-        <section className="social-proof content-section">
+        <section className="social-proof content-section" id="social-proof" tabIndex={-1}>
           <div className="logo-strip">Trusted QA learning community</div>
           <div className="trust">
           Three focused programs <span>★</span> — practical support for QA career growth

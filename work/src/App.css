@@ -1,3 +1,13 @@
 .App {
   min-height: 100vh;
 }
+
+.search-target {
+  animation: search-target-pulse 2.2s ease-out;
+}
+
+@keyframes search-target-pulse {
+  0%, 100% { box-shadow: inherit; }
+  18% { box-shadow: 0 0 0 5px rgba(37, 99, 235, .22), 0 14px 35px rgba(37, 99, 235, .2); }
+  52% { box-shadow: 0 0 0 3px rgba(37, 99, 235, .12), 0 10px 30px rgba(37, 99, 235, .14); }
+}

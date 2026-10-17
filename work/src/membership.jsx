@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './membership.css';
 import SiteNav from './site-nav';
+import { focusSearchTarget, getSearchQuery } from './search-navigation';
 
 const principles = [
   ['01 // AI LEADERSHIP', 'AI for QA Managers', 'Learn how to introduce AI into quality workflows with practical governance, adoption planning, and measurable team outcomes.', 'AI strategy • Governance • Team enablement'],
@@ -24,6 +25,13 @@ const faqs = [
 function Membership() {
   const [playing, setPlaying] = useState(false);
   const [search, setSearch] = useState('');
+  useEffect(() => {
+    const query = getSearchQuery();
+    if (query) setSearch(query);
+  }, []);
+  useEffect(() => {
+    focusSearchTarget(search);
+  }, [search]);
   const visibleTracks = tracks.filter(([, , title, text, , , tags]) =>
     `${title} ${text} ${tags.join(' ')}`.toLowerCase().includes(search.toLowerCase()),
   );
@@ -42,7 +50,7 @@ function Membership() {
 
 function Metric({ label, value, text }) { return <div><span>{label}</span><strong>{value}</strong><p>{text}</p></div>; }
 function SectionIntro({ label, title, text }) { return <div className="section-intro"><span>{label}</span><h2>{title}</h2>{text && <p>{text}</p>}</div>; }
-function TrackCard({ track }) { const [code, status, title, text, price, detail, tags, featured] = track; return <article className={`track-card ${featured ? 'featured-track' : ''}`}>{featured && <b className="track-ribbon">FLAGSHIP TRACK // 80 HRS</b>}<div><div className="track-meta"><span className={featured ? 'blue-text' : ''}>{code}</span><b>{status}</b></div><h4>{title}</h4><p>{text}</p><div className="tag-list">{tags.map((tag) => <span key={tag}>{tag}</span>)}</div></div><footer><div><strong>{price}</strong><small>{detail}</small></div><a href="/checkout">Enroll Now →</a></footer></article>; }
+function TrackCard({ track }) { const [code, status, title, text, price, detail, tags, featured] = track; const id = `track-${title.toLowerCase().replaceAll(' ', '-')}`; return <article className={`track-card ${featured ? 'featured-track' : ''}`} id={id} tabIndex={-1}>{featured && <b className="track-ribbon">FLAGSHIP TRACK // 80 HRS</b>}<div><div className="track-meta"><span className={featured ? 'blue-text' : ''}>{code}</span><b>{status}</b></div><h4>{title}</h4><p>{text}</p><div className="tag-list">{tags.map((tag) => <span key={tag}>{tag}</span>)}</div></div><footer><div><strong>{price}</strong><small>{detail}</small></div><a href="/checkout">Enroll Now →</a></footer></article>; }
 function VideoPreview({ playing, onToggle }) { return <div className="video-player"><div className="video-titlebar"><span>● ● ●　Mock interview preparation preview</span><b>1080p　{playing ? 'PLAYING' : 'PREVIEW'}</b></div><div className="video-screen"><div className="code-preview"><span>{'// Interview preparation session'}</span><p><b>Question</b>: Tell us about your QA leadership approach.</p><p><b>Framework</b>: Context → Action → Result → Learning</p><p><b>Feedback</b>: Clear, specific, and actionable.</p><p><b>Next step</b>: Rehearse your strongest example.</p></div><div className="terminal-output">[MOCK-SESSION] Interview prompts loaded.<br />[FEEDBACK] Response structure reviewed | Next steps ready.</div><div className="faculty-cam"><span>● COACH CAM</span><strong>QA</strong><b>Interview Coach</b><small>Practical feedback</small></div><button className={`play-button ${playing ? 'is-playing' : ''}`} onClick={onToggle} type="button">{playing ? 'Ⅱ' : '▶'}</button></div><div className="video-controls"><div className="progress"><span /></div><div><span>Ⅱ　↶ 10　↷ 10　 08:24 / 24:10</span><span>1.25x　♬　▣　⚙　⛶</span></div></div></div>; }
 function ChapterList() { const chapters = [['00:00 - 05:12', 'Set your interview target', 'Clarify the role, expectations, and examples you need to prepare.'], ['05:13 - 12:40 [NOW PLAYING]', 'Build strong answer frameworks', 'Turn your experience into concise, confident, evidence-based answers.'], ['12:41 - 18:15', 'Practice difficult questions', 'Work through leadership, conflict, and quality strategy prompts.'], ['18:16 - 24:10', 'Plan your next improvements', 'Leave with direct feedback and a short rehearsal plan.']]; return <aside className="chapter-list"><div className="chapter-heading"><span>PREPARATION BREAKDOWN</span><h3>Key Concepts &amp; Timestamps <b>4 Chapters</b></h3></div>{chapters.map(([time, title, text], index) => <article className={index === 1 ? 'current' : ''} key={time}><span>{time}</span><h4>{title}</h4><p>{text}</p></article>)}<div className="audit-note">✓ <span><b>Actionable feedback included</b><small>Every session ends with clear next steps for improvement.</small></span></div></aside>; }
 export default Membership;

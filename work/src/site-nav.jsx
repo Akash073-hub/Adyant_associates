@@ -1,4 +1,21 @@
-function SiteNav({ active, searchValue, onSearchChange, coursesHref = '#courses', mockHref = '#batches', ctaHref = '/membership#curriculum', ctaLabel = 'Book Your Mock Interview', showCta = active === 'home' || ctaLabel === 'Email support', showLogin = active !== 'support' && active !== 'memberships' }) {
+import { useState } from 'react';
+import { navigateToSearch } from './search-navigation';
+
+function SiteNav({ active, searchValue, onSearchChange, onSearchSubmit, coursesHref = '#courses', mockHref = '#batches', ctaHref = '/membership#curriculum', ctaLabel = 'Book Your Mock Interview', showCta = active === 'home' || ctaLabel === 'Email support', showLogin = active !== 'support' && active !== 'memberships' }) {
+  const [internalSearch, setInternalSearch] = useState('');
+  const currentSearch = searchValue ?? internalSearch;
+
+  function handleSearchChange(event) {
+    setInternalSearch(event.target.value);
+    onSearchChange?.(event);
+  }
+
+  function handleSearchSubmit(event) {
+    event.preventDefault();
+    const submit = onSearchSubmit || navigateToSearch;
+    submit(currentSearch);
+  }
+
   return (
     <header className="site-header">
       <a className="brand" href="/" aria-label="Adyant Associates home">
@@ -15,10 +32,10 @@ function SiteNav({ active, searchValue, onSearchChange, coursesHref = '#courses'
       </nav>
 
       <div className="header-actions">
-        <label className="search-button">
-          <span aria-hidden="true">⌕</span>
-          <input aria-label="Search programs" onChange={onSearchChange} placeholder="Search programs..." type="search" value={searchValue} />
-        </label>
+        <form className="search-button" onSubmit={handleSearchSubmit}>
+          <button aria-label="Submit search" className="search-submit" type="submit">⌕</button>
+          <input aria-label="Search programs" onChange={handleSearchChange} placeholder="Search programs..." type="search" value={currentSearch} />
+        </form>
         {showLogin && <a href="/login">Member Login</a>}
         {showCta && <a className="dark-button compact" href={ctaHref}>{ctaLabel}</a>}
       </div>

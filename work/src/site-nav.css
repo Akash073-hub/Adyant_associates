@@ -110,6 +110,15 @@
   font: inherit;
 }
 
+.site-header .search-submit {
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
 .site-header .search-button input::placeholder {
   color: var(--home-muted);
   opacity: 1;

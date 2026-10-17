@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './support.css';
 import SiteNav from './site-nav';
+import { useSearchTarget } from './search-navigation';
 
 const SUPPORT_EMAIL = 'akashrbhat73@gmail.com';
 const courses = [
@@ -54,7 +55,7 @@ function Chatbot() {
   }
 
   return (
-    <section className="support-chat" aria-labelledby="chat-title">
+    <section className="support-chat" id="support-chat" aria-labelledby="chat-title" tabIndex={-1}>
       <div className="support-chat-heading">
         <div>
           <span className="support-label">Quick help</span>
@@ -90,12 +91,13 @@ function Chatbot() {
 }
 
 function Support() {
+  useSearchTarget();
   return (
     <div className="support-page">
       <SiteNav active="support" coursesHref="/membership#curriculum" mockHref="/#batches" ctaHref={`mailto:${SUPPORT_EMAIL}`} ctaLabel="Email support" showCta />
 
       <main>
-        <section className="support-hero">
+        <section className="support-hero" id="support-hero" tabIndex={-1}>
           <span className="support-label">Support desk / Privacy</span>
           <h1>Clear answers, thoughtful support.</h1>
           <p>Use the chatbot for quick guidance, or contact a real person whenever you need more help with Adyant Associates.</p>

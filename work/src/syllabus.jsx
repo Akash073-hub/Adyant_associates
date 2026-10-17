@@ -1,7 +1,9 @@
+import { useSearchTarget } from './search-navigation';
 import './syllabus.css';
 import SiteNav from './site-nav';
 
 function Syllabus() {
+  useSearchTarget();
   return (
     <div className="syllabus-page">
       <SiteNav active="courses" coursesHref="/membership#curriculum" mockHref="/#batches" ctaHref="/checkout" />
@@ -11,7 +13,7 @@ function Syllabus() {
         <h1>AI for Software Testers: GenAI, AI Agents, MCP &amp; N8N</h1>
         <p className="syllabus-source">Reference course: Udemy</p>
 
-        <section className="syllabus-card">
+        <section className="syllabus-card" id="syllabus-course" tabIndex={-1}>
           <h2>Course syllabus</h2>
           <p>
             Explore practical applications of generative AI, AI agents, MCP,

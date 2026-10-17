@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import './signin.css';
 import SiteNav from './site-nav';
+import { useSearchTarget } from './search-navigation';
 
 function ResetCredentials() {
+  useSearchTarget();
   const [submitted, setSubmitted] = useState(false);
 
   function handleSubmit(event) {
@@ -16,7 +18,7 @@ function ResetCredentials() {
       <main className="signin-main">
         <div className="signin-wrap">
           <div className="protocol-line"><span>{'// CREDENTIAL RECOVERY PROTOCOL // MEMBER IDENTITY VERIFICATION'}</span></div>
-          <section className="signin-card">
+          <section className="signin-card" id="credential-recovery" tabIndex={-1}>
             <div className="signin-accent" />
             <div className="signin-intro"><h1>Reset Your SDET Credentials</h1><p>Enter the email address you used when purchasing your course or mock interview. We’ll use it to locate your member access and send the next steps.</p></div>
             <form className="signin-form" onSubmit={handleSubmit}>

@@ -16,7 +16,7 @@ function SignIn() {
 
       <main className="signin-main">
         <div className="signin-wrap">
-          <div className="protocol-line"><span>{'// SECURE MEMBER ACCESS PROTOCOL // REPOSITORY & LAB INGESTION'}</span><b>v4.19-PROD</b></div>
+          <div className="protocol-line"><span>{'// SECURE MEMBER ACCESS PROTOCOL // REPOSITORY & LAB INGESTION'}</span></div>
           <section className="signin-card">
             <div className="signin-accent" />
             <div className="signin-intro"><h1>Sign In to Your QA Career Portal</h1><p>Access your AI for QA Managers guidance, interview preparation resources, and mock interview booking details.</p></div>
@@ -24,7 +24,7 @@ function SignIn() {
               <SignInField label="Candidate Handle / Username" note="sdet_id / LDAP" icon="@" placeholder="alex.rivera.sdet" type="text" valid />
               <SignInField label="Registered Email Address" note="IDENTITY VERIFIED" icon="✉" placeholder="you@example.com" type="email" />
               <p className="field-help"><span>ⓘ</span> Use the email linked to your program or mock interview booking.</p>
-              <div className="signin-options"><label><input defaultChecked type="checkbox" /> <span>Keep this terminal session authenticated for 30 days</span></label><a href="#reset">Trouble signing in? / Reset SDET Credentials</a></div>
+              <div className="signin-options"><label><input defaultChecked type="checkbox" /> <span>Keep this terminal session authenticated for 30 days</span></label><a href="/reset-credentials">Trouble signing in? / Reset SDET Credentials</a></div>
               <button className="authenticate-button" type="submit"><span aria-hidden="true">▣</span> {authenticated ? 'Authenticated — Portal Ready' : 'Authenticate & Enter Portal →'}</button>
             </form>
           </section>

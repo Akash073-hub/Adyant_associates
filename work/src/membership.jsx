@@ -36,7 +36,7 @@ function Membership() {
       <section className="courses-section classroom-section" id="classroom-preview"><SectionIntro label="03 // PREVIEW" title="See how focused preparation works" text="Preview a practical session built around clear examples, realistic interview prompts, and direct feedback." /><div className="classroom-grid"><VideoPreview playing={playing} onToggle={() => setPlaying(!playing)} /><ChapterList /></div></section>
       <section className="courses-section faq-section" id="faq"><SectionIntro label="04 // PROGRAM FAQs" title="Frequently Addressed Inquiries" text="Clear answers about choosing a program, preparing for interviews, and booking your mock session." /><div className="faq-list">{faqs.map(([question, answer], index) => <details open={index === 0} key={question}><summary>{question}<b>⌄</b></summary><p>{answer}</p></details>)}</div></section>
     </main>
-    <footer className="courses-footer"><div><a className="courses-brand" href="/"><span /> Adyant Associates</a><small>© 2026 Adyant Associates. All rights reserved.</small></div><nav><a href="#curriculum">Curriculum Matrix</a><a href="#curriculum">Live Batches</a><a href="#pedagogy">Pedagogy</a><a href="#classroom-preview">Classroom Preview</a><a href="#faq">Privacy Policy</a><a href="#faq">Terms of Service</a></nav></footer>
+    <footer className="courses-footer"><div><a className="courses-brand" href="/"><span /> Adyant Associates</a><small>© 2026 Adyant Associates. All rights reserved.</small></div><nav><a href="/support">Privacy Policy</a><a href="#faq">Terms of Service</a></nav></footer>
   </div>;
 }
 

@@ -1,5 +1,7 @@
 import './App.css';
 import './site-nav.css';
+import { useEffect } from 'react';
+import { recordVisit } from './api';
 import Home from './home';
 import SignIn from './signin';
 import ResetCredentials from './reset-credentials';
@@ -9,6 +11,12 @@ import Syllabus from './syllabus';
 import Support from './support';
 
 function App() {
+  useEffect(() => {
+    recordVisit(window.location.pathname).catch((error) => {
+      console.error('Unable to record page visit.', error);
+    });
+  }, []);
+
   const isLoginPage = window.location.pathname === '/login';
   const isResetCredentialsPage = window.location.pathname === '/reset-credentials';
   const isMembershipPage = window.location.pathname === '/membership';

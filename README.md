@@ -119,6 +119,17 @@ The Node service in [`backend-node/`](./backend-node/) provides the account and 
 - `POST /api/login`
 - `POST /api/visit`
 
+Each successful registration, login, or visit is stored in both formats in the configured GitHub repository:
+
+```text
+data/users.json
+data/users.csv
+data/visits.json
+data/visits.csv
+```
+
+The JSON files are used by the API; the CSV files provide a tabular view for GitHub, Excel, and Google Sheets.
+
 Copy [`backend-node/.env.example`](./backend-node/.env.example) to `backend-node/.env`, then set a replacement GitHub token, repository owner/name, and JWT secret. The token is server-only. Start it with:
 
 ```bash

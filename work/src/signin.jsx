@@ -1,27 +1,24 @@
 import { useState } from 'react';
 import './signin.css';
 import SiteNav from './site-nav';
-import { loginUser, registerUser } from './api';
+import { apiRequest } from './api';
 
 function SignIn() {
   const [authenticated, setAuthenticated] = useState(false);
   const [error, setError] = useState('');
-  const [isRegistering, setIsRegistering] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
     const form = new FormData(event.currentTarget);
     try {
-      const credentials = {
-        email: form.get('email'),
-        password: form.get('password'),
-      };
-      if (isRegistering) {
-        await registerUser({ ...credentials, name: form.get('name') });
-      } else {
-        await loginUser(credentials);
-      }
+      await apiRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          username: form.get('username'),
+          email: form.get('email'),
+        }),
+      });
       setAuthenticated(true);
     } catch (requestError) {
       setError(requestError.message);
@@ -39,16 +36,12 @@ function SignIn() {
             <div className="signin-accent" />
             <div className="signin-intro"><h1>Sign In to Your QA Career Portal</h1><p>Access your AI for QA Managers guidance, interview preparation resources, and mock interview booking details.</p></div>
             <form className="signin-form" onSubmit={handleSubmit}>
-              {isRegistering && <SignInField name="name" label="Full Name" note="MEMBER PROFILE" icon="A" placeholder="Alex Rivera" type="text" />}
+              <SignInField name="username" label="Candidate Handle / Username" note="sdet_id / LDAP" icon="@" placeholder="alex.rivera.sdet" type="text" valid />
               <SignInField name="email" label="Registered Email Address" note="IDENTITY VERIFIED" icon="✉" placeholder="you@example.com" type="email" />
-              <SignInField name="password" label="Password" note="MINIMUM 6 CHARACTERS" icon="▣" placeholder="••••••••" type="password" />
               <p className="field-help"><span>ⓘ</span> Use the email linked to your program or mock interview booking.</p>
               <div className="signin-options"><label><input defaultChecked type="checkbox" /> <span>Keep this terminal session authenticated for 30 days</span></label><a href="/reset-credentials">Trouble signing in? / Reset SDET Credentials</a></div>
-              <button className="authenticate-button" type="submit"><span aria-hidden="true">▣</span> {authenticated ? 'Authenticated — Portal Ready' : isRegistering ? 'Create Member Account →' : 'Authenticate & Enter Portal →'}</button>
+              <button className="authenticate-button" type="submit"><span aria-hidden="true">▣</span> {authenticated ? 'Authenticated — Portal Ready' : 'Authenticate & Enter Portal →'}</button>
               {error && <p className="field-help" role="alert">{error}</p>}
-              <button className="dark-button" type="button" onClick={() => { setIsRegistering((value) => !value); setAuthenticated(false); setError(''); }}>
-                {isRegistering ? 'Already registered? Sign in' : 'New member? Create an account'}
-              </button>
             </form>
           </section>
         </div>

@@ -1,13 +1,28 @@
 import { useState } from 'react';
 import './signin.css';
 import SiteNav from './site-nav';
+import { apiRequest } from './api';
 
 function SignIn() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [error, setError] = useState('');
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    setAuthenticated(true);
+    setError('');
+    const form = new FormData(event.currentTarget);
+    try {
+      await apiRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          username: form.get('username'),
+          email: form.get('email'),
+        }),
+      });
+      setAuthenticated(true);
+    } catch (requestError) {
+      setError(requestError.message);
+    }
   }
 
   return (
@@ -21,11 +36,12 @@ function SignIn() {
             <div className="signin-accent" />
             <div className="signin-intro"><h1>Sign In to Your QA Career Portal</h1><p>Access your AI for QA Managers guidance, interview preparation resources, and mock interview booking details.</p></div>
             <form className="signin-form" onSubmit={handleSubmit}>
-              <SignInField label="Candidate Handle / Username" note="sdet_id / LDAP" icon="@" placeholder="alex.rivera.sdet" type="text" valid />
-              <SignInField label="Registered Email Address" note="IDENTITY VERIFIED" icon="✉" placeholder="you@example.com" type="email" />
+              <SignInField name="username" label="Candidate Handle / Username" note="sdet_id / LDAP" icon="@" placeholder="alex.rivera.sdet" type="text" valid />
+              <SignInField name="email" label="Registered Email Address" note="IDENTITY VERIFIED" icon="✉" placeholder="you@example.com" type="email" />
               <p className="field-help"><span>ⓘ</span> Use the email linked to your program or mock interview booking.</p>
               <div className="signin-options"><label><input defaultChecked type="checkbox" /> <span>Keep this terminal session authenticated for 30 days</span></label><a href="/reset-credentials">Trouble signing in? / Reset SDET Credentials</a></div>
               <button className="authenticate-button" type="submit"><span aria-hidden="true">▣</span> {authenticated ? 'Authenticated — Portal Ready' : 'Authenticate & Enter Portal →'}</button>
+              {error && <p className="field-help" role="alert">{error}</p>}
             </form>
           </section>
         </div>
@@ -36,8 +52,8 @@ function SignIn() {
   );
 }
 
-function SignInField({ label, note, icon, placeholder, type, valid }) {
-  return <div className="signin-field"><div className="field-label"><label htmlFor={label}>{label}</label><span>{note}</span></div><div className="input-wrap"><span className="input-icon" aria-hidden="true">{icon}</span><input id={label} placeholder={placeholder} type={type} required />{valid && <span className="valid-icon" aria-label="Valid">✓</span>}</div></div>;
+function SignInField({ name, label, note, icon, placeholder, type, valid }) {
+  return <div className="signin-field"><div className="field-label"><label htmlFor={name}>{label}</label><span>{note}</span></div><div className="input-wrap"><span className="input-icon" aria-hidden="true">{icon}</span><input id={name} name={name} placeholder={placeholder} type={type} required />{valid && <span className="valid-icon" aria-label="Valid">✓</span>}</div></div>;
 }
 
 export default SignIn;

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import './support.css';
 import SiteNav from './site-nav';
 import { useSearchTarget } from './search-navigation';
+import { apiRequest } from './api';
 
 const SUPPORT_EMAIL = 'akashrbhat73@gmail.com';
 const courses = [
@@ -27,11 +28,22 @@ function findCourse(question) {
 function Chatbot() {
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState(initialMessages);
+  const [error, setError] = useState('');
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     const trimmedQuestion = question.trim();
     if (!trimmedQuestion) return;
+    setError('');
+    try {
+      await apiRequest('/support', {
+        method: 'POST',
+        body: JSON.stringify({ question: trimmedQuestion }),
+      });
+    } catch (requestError) {
+      setError(requestError.message);
+      return;
+    }
 
     const matchedCourse = findCourse(trimmedQuestion);
     const asksAboutCourses = /course|program|class|training|learn|syllabus/i.test(trimmedQuestion);
@@ -86,6 +98,7 @@ function Chatbot() {
           <button className="dark-button" type="submit">Send</button>
         </div>
       </form>
+      {error && <p className="field-help" role="alert">{error}</p>}
     </section>
   );
 }

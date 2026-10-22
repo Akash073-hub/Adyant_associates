@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --check server.js && node --check githubDb.js"
+    "test": "node --check server.js && node --check githubDb.js && node -e \"const {recordsToCsv}=require('./githubDb'); const csv=recordsToCsv([{email:'a@b.com',passwordHash:'hidden',name:'A, B'}]); if (!csv.includes('email,name') || csv.includes('passwordHash') || !csv.includes('\\\\\\\"A, B\\\\\\\"')) process.exit(1);\""
   },
   "keywords": [],
   "author": "",

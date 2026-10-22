@@ -2,7 +2,7 @@
 
 Adyant Associates is a React-based frontend prototype for an enterprise Software Development Engineer in Test (SDET) training platform. The application presents professional automation engineering courses, live cohorts, practice sandboxes, mentorship, code reviews, and an enrollment checkout flow.
 
-The project is intended to demonstrate the complete learner journey and the visual direction of the product. It is currently a frontend-only application. Authentication, course data, payment processing, email, and backend persistence are not connected yet.
+The project is intended to demonstrate the complete learner journey and the visual direction of the product. The React frontend is paired with a Flask API in `backend/`. GitHub's Contents API stores the initial platform records as JSON so a separate database server is not required for development.
 
 ## What This Project Means
 
@@ -80,6 +80,36 @@ The intended process currently looks like this:
 - Order summary with cohort details, deliverables, discount, and total tuition.
 - Enrollment confirmation button with a local confirmation state.
 
+## Backend API
+
+The Flask service is in [`backend/`](./backend/) and currently exposes:
+
+- `GET /api/health` and `GET /api/programs`
+- `POST /api/assessments`
+- `POST /api/auth/login` and `POST /api/auth/reset`
+- `POST /api/support`
+- `POST /api/bookings`
+
+Copy [`backend/.env.example`](./backend/.env.example) to `backend/.env` and set a fine-grained GitHub token with Contents read/write access to the repository named by `GITHUB_REPOSITORY`. The token stays on the server; it must not be added to React environment variables or committed. The API creates or updates `GITHUB_DATA_PATH` (default `data/store.json`) through the GitHub Contents API.
+
+Run the backend from the repository root:
+
+```bash
+cd backend
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+python app.py
+```
+
+Run backend tests with:
+
+```bash
+python -m unittest discover -s backend -p 'test_*.py'
+```
+
+The current booking endpoint records a pending booking only. A real payment provider, payment verification, email delivery, rate limiting, and production-grade session/token expiry still need to be added before accepting real payments or sensitive credentials.
+
 ## Current Stopping Point
 
 The project is stopped at the frontend prototype stage. The screens and primary interactions are present, but they are not yet backed by real services.
@@ -87,7 +117,7 @@ The project is stopped at the frontend prototype stage. The screens and primary 
 The following parts are still pending:
 
 - Real user registration, login, sessions, and password reset.
-- A backend database for users, courses, cohorts, enrollments, and progress.
+- A production database for users, courses, cohorts, enrollments, and progress. The current GitHub JSON store is a development persistence layer.
 - Admin tools for managing course content, mentors, seats, and schedules.
 - A real payment provider and server-side payment verification.
 - Persistent enrollment confirmation and email receipts.

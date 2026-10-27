@@ -110,36 +110,6 @@ python -m unittest discover -s backend -p 'test_*.py'
 
 The current booking endpoint records a pending booking only. A real payment provider, payment verification, email delivery, rate limiting, and production-grade session/token expiry still need to be added before accepting real payments or sensitive credentials.
 
-### Node backend for GitHub-backed accounts
-
-The Node service in [`backend-node/`](./backend-node/) provides the account and visit API used by the React app:
-
-- `GET /api/health`
-- `POST /api/register`
-- `POST /api/login`
-- `POST /api/visit`
-
-Each successful registration, login, or visit is stored in both formats in the configured GitHub repository:
-
-```text
-data/users.json
-data/users.csv
-data/visits.json
-data/visits.csv
-```
-
-The JSON files are used by the API; the CSV files provide a tabular view for GitHub, Excel, and Google Sheets.
-
-Copy [`backend-node/.env.example`](./backend-node/.env.example) to `backend-node/.env`, then set a replacement GitHub token, repository owner/name, and JWT secret. The token is server-only. Start it with:
-
-```bash
-cd backend-node
-npm ci
-npm start
-```
-
-The React app uses `http://localhost:5001/api` by default. To override it, copy [`work/.env.local.example`](./work/.env.local.example) to `work/.env.local`.
-
 ## Current Stopping Point
 
 The project is stopped at the frontend prototype stage. The screens and primary interactions are present, but they are not yet backed by real services.

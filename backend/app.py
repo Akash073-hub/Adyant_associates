@@ -7,8 +7,10 @@ read only by this process and must never be exposed to the React application.
 from __future__ import annotations
 
 import base64
+import csv
 import hashlib
 import hmac
+import io
 import json
 import os
 import secrets
@@ -133,13 +135,44 @@ class GitHubStore:
 
     def write(self, data: dict[str, list[dict[str, Any]]], sha: str | None) -> None:
         self._validate_configuration()
-        url = f"{self.api_url}/repos/{self.repository}/contents/{self.path}"
+        normalized = self._normalise(data)
+        self._write_file(
+            self.path,
+            (json.dumps(normalized, indent=2) + "\n").encode("utf-8"),
+            "Update platform records",
+            sha,
+        )
+
+        # GitHub renders CSV files as tables. Keep the complete login history in
+        # the existing users collection and publish the useful columns beside it.
+        users_csv = io.StringIO(newline="")
+        columns = ["id", "created_at", "username", "email"]
+        writer = csv.DictWriter(users_csv, fieldnames=columns, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(normalized["users"])
+        parent = self.path.rsplit("/", 1)[0] if "/" in self.path else ""
+        csv_path = f"{parent}/users.csv" if parent else "users.csv"
+        self._write_file(
+            csv_path,
+            users_csv.getvalue().encode("utf-8"),
+            "Update login history table",
+        )
+
+    def _write_file(
+        self, path: str, content: bytes, message: str, sha: str | None = None
+    ) -> None:
+        url = f"{self.api_url}/repos/{self.repository}/contents/{path}"
         body: dict[str, Any] = {
-            "message": "Update platform records",
-            "content": base64.b64encode(
-                (json.dumps(self._normalise(data), indent=2) + "\n").encode("utf-8")
-            ).decode("ascii"),
+            "message": message,
+            "content": base64.b64encode(content).decode("ascii"),
         }
+        if sha is None:
+            try:
+                existing = self._request("GET", url)
+                sha = existing.get("sha")
+            except RuntimeError as error:
+                if " (404):" not in str(error):
+                    raise
         if sha:
             body["sha"] = sha
         self._request("PUT", url, body)

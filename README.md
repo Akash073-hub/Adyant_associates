@@ -90,6 +90,8 @@ The Flask service is in [`backend/`](./backend/) and currently exposes:
 - `POST /api/support`
 - `POST /api/bookings`
 
+Successful sign-in form submissions are recorded in the GitHub JSON store with the username, email, and UTC timestamp. The API also updates `data/users.csv` (beside the configured `GITHUB_DATA_PATH`) with the login history, which GitHub displays as a table. The current sign-in screen is a prototype and does not verify a password or account.
+
 Copy [`backend/.env.example`](./backend/.env.example) to `backend/.env` and set a fine-grained GitHub token with Contents read/write access to the repository named by `GITHUB_REPOSITORY`. The token stays on the server; it must not be added to React environment variables or committed. The API creates or updates `GITHUB_DATA_PATH` (default `data/store.json`) through the GitHub Contents API.
 
 Run the backend from the repository root:

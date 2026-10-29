@@ -9,11 +9,13 @@ import Syllabus from './syllabus';
 import Support from './support';
 import AccessPortal from './access-portal';
 import AdminLogin from './admin-login';
+import AdminVideos from './admin-videos';
 
 function App() {
   const isHomePage = window.location.pathname === '/home';
   const isStudentAccessPage = window.location.pathname === '/student-login';
   const isAdminLoginPage = window.location.pathname === '/admin-login';
+  const isAdminPage = window.location.pathname === '/admin';
   const isLoginPage = window.location.pathname === '/login';
   const isResetCredentialsPage = window.location.pathname === '/reset-credentials';
   const isMembershipPage = window.location.pathname === '/membership';
@@ -22,6 +24,7 @@ function App() {
   const isSupportPage = ['/support', '/privacy'].includes(window.location.pathname);
   if (isStudentAccessPage) return <AccessPortal view="student" />;
   if (isAdminLoginPage) return <AdminLogin />;
+  if (isAdminPage) return <AdminVideos />;
   if (isLoginPage) return <SignIn />;
   if (isResetCredentialsPage) return <ResetCredentials />;
   if (isMembershipPage) return <Membership />;

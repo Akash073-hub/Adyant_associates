@@ -77,11 +77,13 @@ function getEmbedUrl(rawUrl) {
     const url = new URL(rawUrl);
     if (url.hostname === 'youtu.be') return `https://www.youtube-nocookie.com/embed/${url.pathname.slice(1)}`;
     if (url.hostname === 'youtube.com' || url.hostname.endsWith('.youtube.com')) {
-      const id = url.pathname === '/watch' ? url.searchParams.get('v') : url.pathname.split('/').filter(Boolean).at(-1);
+      const segments = url.pathname.split('/').filter(Boolean);
+      const id = url.pathname === '/watch' ? url.searchParams.get('v') : segments[segments.length - 1];
       return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
     }
     if (url.hostname === 'vimeo.com' || url.hostname.endsWith('.vimeo.com')) {
-      const id = url.pathname.split('/').filter(Boolean).at(-1);
+      const segments = url.pathname.split('/').filter(Boolean);
+      const id = segments[segments.length - 1];
       return id && /^\d+$/.test(id) ? `https://player.vimeo.com/video/${id}` : null;
     }
   } catch (_) {

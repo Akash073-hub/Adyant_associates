@@ -6,7 +6,7 @@ function Syllabus() {
   useSearchTarget();
   return (
     <div className="syllabus-page">
-      <SiteNav active="courses" coursesHref="/membership#curriculum" mockHref="/#batches" ctaHref="/checkout" />
+      <SiteNav active="courses" coursesHref="/membership#curriculum" mockHref="/home#batches" ctaHref="/checkout" />
 
       <main className="syllabus-content">
         <span className="syllabus-label">AI FOR QA MANAGERS // SYLLABUS</span>
@@ -26,7 +26,7 @@ function Syllabus() {
             <p>✓ Model Context Protocol (MCP) concepts and usage</p>
             <p>✓ N8N automation workflows for QA teams</p>
           </div>
-          <a className="syllabus-button" href="/">Back to course programs</a>
+          <a className="syllabus-button" href="/home#courses">Back to course programs</a>
         </section>
       </main>
     </div>

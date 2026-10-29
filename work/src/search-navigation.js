@@ -13,11 +13,11 @@ const STOP_WORDS = new Set([
 ]);
 
 const SECTION_TARGETS = [
-  { path: '/', id: 'courses', terms: ['course', 'courses', 'program', 'programs', 'learn', 'resource', 'next step', 'offering'] },
-  { path: '/', id: 'batches', terms: ['mock', 'booking', 'batch', 'session', 'schedule', 'mentor', 'cohort'] },
-  { path: '/', id: 'social-proof', terms: ['review', 'reviews', 'testimonial', 'testimonials', 'customer', 'company', 'trust', 'experience', 'success', 'community'] },
-  { path: '/', id: 'support', terms: ['support', 'guidance', 'career', 'help', 'leadership', 'quality'] },
-  { path: '/', id: 'membership', terms: ['assessment', 'diagnostic', 'readiness', 'roadmap', 'skill gap'] },
+  { path: '/home', id: 'courses', terms: ['course', 'courses', 'program', 'programs', 'learn', 'resource', 'next step', 'offering'] },
+  { path: '/home', id: 'batches', terms: ['mock', 'booking', 'batch', 'session', 'schedule', 'mentor', 'cohort'] },
+  { path: '/home', id: 'social-proof', terms: ['review', 'reviews', 'testimonial', 'testimonials', 'customer', 'company', 'trust', 'experience', 'success', 'community'] },
+  { path: '/home', id: 'support', terms: ['support', 'guidance', 'career', 'help', 'leadership', 'quality'] },
+  { path: '/home', id: 'membership', terms: ['assessment', 'diagnostic', 'readiness', 'roadmap', 'skill gap'] },
   { path: '/membership', id: 'pedagogy', terms: ['framework', 'teach', 'teaching', 'method', 'principle', 'rigor', 'architecture'] },
   { path: '/membership', id: 'curriculum', terms: ['course', 'courses', 'program', 'programs', 'enroll', 'offering', 'guidance'] },
   { path: '/membership', id: 'classroom-preview', terms: ['preview', 'lesson', 'prepare', 'preparation', 'interview', 'practice', 'feedback'] },
@@ -76,7 +76,7 @@ export function navigateToSearch(query) {
   let destination = path;
   let target = '';
 
-  if (course && path === '/') target = `course-${course.slug}`;
+  if (course && path === '/home') target = `course-${course.slug}`;
   else if (course && path === '/membership') target = `track-${course.slug}`;
   else if (course && path === '/syllabus/ai-for-qa-managers') target = 'syllabus-course';
   else if (course) {
@@ -88,7 +88,7 @@ export function navigateToSearch(query) {
     destination = globalSection.path;
     target = globalSection.id;
   } else if (meaningfulWords(trimmed).length > 0) {
-    destination = '/';
+    destination = '/home';
     target = 'courses';
   }
 

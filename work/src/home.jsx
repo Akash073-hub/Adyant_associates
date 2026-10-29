@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import './home.css';
 import SiteNav from './site-nav';
 import { focusSearchTarget, getSearchQuery } from './search-navigation';
+import { apiRequest } from './api';
 
 const pillars = [
   ['01 / AI LEADERSHIP', 'AI for QA Managers', 'Lead practical AI adoption across QA teams with responsible workflows, evaluation frameworks, and measurable quality outcomes.'],
@@ -107,6 +108,31 @@ function Home() {
   const [filter, setFilter]       = useState('All Programs');
   const [search, setSearch]       = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submittingAssessment, setSubmittingAssessment] = useState(false);
+  const [assessmentError, setAssessmentError] = useState('');
+
+  async function submitAssessment(event) {
+    event.preventDefault();
+    setAssessmentError('');
+    setSubmitted(false);
+    setSubmittingAssessment(true);
+    const form = new FormData(event.currentTarget);
+    try {
+      await apiRequest('/assessments', {
+        method: 'POST',
+        body: JSON.stringify({
+          role: form.get('role'),
+          stack: form.get('stack'),
+          goal: form.get('goal'),
+        }),
+      });
+      setSubmitted(true);
+    } catch (requestError) {
+      setAssessmentError(requestError.message);
+    } finally {
+      setSubmittingAssessment(false);
+    }
+  }
 
   useEffect(() => {
     const query = getSearchQuery();
@@ -360,7 +386,7 @@ function Home() {
               </p>
             </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }}>
+            <form onSubmit={submitAssessment}>
               <Question title="1. What is your current technical role?" name="role"
                 options={['Manual QA / Functional Tester', 'Junior QA Automation', 'Developer transitioning to SDET']} />
               <Question title="2. Which testing stack do you want to master first?" name="stack"
@@ -369,11 +395,12 @@ function Home() {
                 options={['Switch from Manual to SDET', 'Promoted to Lead / Architect', 'Secure Global Remote Offer']} />
 
               <div className="form-footer">
-                <span>{submitted ? 'Your roadmap request has been received.' : 'Immediate feedback report generated upon submission.'}</span>
-                <button className="dark-button" type="submit">
-                  {submitted ? 'Roadmap Requested ✓' : 'Generate Roadmap & Scholarship →'}
+                <span aria-live="polite">{assessmentError || (submitted ? 'Your roadmap request has been saved.' : 'Immediate feedback report generated upon submission.')}</span>
+                <button className="dark-button" type="submit" disabled={submittingAssessment}>
+                  {submittingAssessment ? 'Saving your assessment…' : submitted ? 'Roadmap Requested ✓' : 'Generate Roadmap & Scholarship →'}
                 </button>
               </div>
+              {assessmentError && <p className="field-help" role="alert">Could not save your assessment. {assessmentError}</p>}
             </form>
           </div>
         </section>

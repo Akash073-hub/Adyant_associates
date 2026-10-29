@@ -14,6 +14,7 @@ import io
 import json
 import os
 import secrets
+import threading
 import urllib.error
 import urllib.request
 from datetime import UTC, datetime
@@ -136,27 +137,58 @@ class GitHubStore:
     def write(self, data: dict[str, list[dict[str, Any]]], sha: str | None) -> None:
         self._validate_configuration()
         normalized = self._normalise(data)
-        self._write_file(
-            self.path,
-            (json.dumps(normalized, indent=2) + "\n").encode("utf-8"),
-            "Update platform records",
-            sha,
-        )
+        for attempt in range(3):
+            try:
+                self._write_file(
+                    self.path,
+                    (json.dumps(normalized, indent=2) + "\n").encode("utf-8"),
+                    "Update platform records",
+                    sha,
+                )
+                break
+            except RuntimeError as error:
+                if " (409):" not in str(error) or attempt == 2:
+                    raise
+                latest, sha = self.read()
+                normalized = self._merge_new_records(latest, normalized)
 
         # GitHub renders CSV files as tables. Keep the complete login history in
         # the existing users collection and publish the useful columns beside it.
-        users_csv = io.StringIO(newline="")
-        columns = ["id", "created_at", "username", "email"]
-        writer = csv.DictWriter(users_csv, fieldnames=columns, extrasaction="ignore")
-        writer.writeheader()
-        writer.writerows(normalized["users"])
         parent = self.path.rsplit("/", 1)[0] if "/" in self.path else ""
         csv_path = f"{parent}/users.csv" if parent else "users.csv"
-        self._write_file(
-            csv_path,
-            users_csv.getvalue().encode("utf-8"),
-            "Update login history table",
-        )
+        for attempt in range(3):
+            users_csv = io.StringIO(newline="")
+            columns = ["id", "created_at", "username", "email"]
+            writer = csv.DictWriter(users_csv, fieldnames=columns, extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(normalized["users"])
+            try:
+                self._write_file(
+                    csv_path,
+                    users_csv.getvalue().encode("utf-8"),
+                    "Update login history table",
+                )
+                break
+            except RuntimeError as error:
+                if " (409):" not in str(error) or attempt == 2:
+                    raise
+                normalized, _ = self.read()
+
+    @staticmethod
+    def _merge_new_records(
+        latest: dict[str, list[dict[str, Any]]],
+        attempted: dict[str, list[dict[str, Any]]],
+    ) -> dict[str, list[dict[str, Any]]]:
+        """Keep records added by this request while incorporating concurrent writes."""
+        merged = GitHubStore._normalise(latest)
+        for collection, attempted_records in attempted.items():
+            known_ids = {record.get("id") for record in merged[collection]}
+            merged[collection].extend(
+                record
+                for record in attempted_records
+                if record.get("id") not in known_ids
+            )
+        return merged
 
     def _write_file(
         self, path: str, content: bytes, message: str, sha: str | None = None
@@ -197,6 +229,9 @@ def create_app(
         if origin.strip()
     }
     persistence = store or GitHubStore(env)
+    # GitHub's Contents API uses optimistic concurrency (the file SHA). Keep
+    # this process from issuing overlapping read/modify/write sequences.
+    persistence_lock = threading.Lock()
 
     @app.after_request
     def add_cors_headers(response: Any) -> Any:
@@ -258,14 +293,15 @@ def create_app(
         return jsonify({"booking": record}), 201
 
     def save_record(collection: str, payload: dict[str, Any]) -> dict[str, Any]:
-        data, sha = persistence.read()
-        record = {
-            "id": secrets.token_urlsafe(12),
-            "created_at": datetime.now(UTC).isoformat(),
-            **payload,
-        }
-        data[collection].append(record)
-        persistence.write(data, sha)
+        with persistence_lock:
+            data, sha = persistence.read()
+            record = {
+                "id": secrets.token_urlsafe(12),
+                "created_at": datetime.now(UTC).isoformat(),
+                **payload,
+            }
+            data[collection].append(record)
+            persistence.write(data, sha)
         return record
 
     def require_json(required_fields: set[str]) -> dict[str, Any]:

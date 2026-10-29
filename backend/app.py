@@ -15,11 +15,15 @@ import io
 import json
 import os
 import secrets
+import smtplib
+import ssl
 import threading
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
 from datetime import UTC, datetime
+from email.message import EmailMessage
+from email.utils import formataddr
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -51,6 +55,7 @@ DEFAULT_STORE: dict[str, list[dict[str, Any]]] = {
     "admins": [],
     "assessments": [],
     "support_requests": [],
+    "mock_interview_requests": [],
     "reset_requests": [],
     "bookings": [],
     "videos": [],
@@ -308,6 +313,46 @@ def create_app(
     # GitHub's Contents API uses optimistic concurrency (the file SHA). Keep
     # this process from issuing overlapping read/modify/write sequences.
     persistence_lock = threading.Lock()
+    support_email = env.get("SUPPORT_EMAIL", "akashrbhat73@gmail.com").strip()
+
+    def send_support_email(subject: str, body: str, reply_to: str | None = None) -> None:
+        smtp_host = env.get("SMTP_HOST", "").strip()
+        smtp_username = env.get("SMTP_USERNAME", "").strip()
+        smtp_password = env.get("SMTP_PASSWORD", "")
+        from_email = env.get("SMTP_FROM_EMAIL", smtp_username).strip()
+        try:
+            smtp_port = int(env.get("SMTP_PORT", "587"))
+        except ValueError as error:
+            raise ConfigurationError("SMTP_PORT must be a valid port number.") from error
+        if not all((smtp_host, smtp_username, smtp_password, from_email, support_email)):
+            raise ConfigurationError(
+                "Set SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, and SMTP_FROM_EMAIL in backend/.env."
+            )
+        if reply_to and any(char in reply_to for char in "\r\n"):
+            raise ValueError("Reply email address is invalid.")
+
+        message = EmailMessage()
+        message["Subject"] = subject
+        message["From"] = formataddr(("Adyant Associates", from_email))
+        message["To"] = support_email
+        if reply_to:
+            message["Reply-To"] = reply_to
+        message.set_content(body)
+        try:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as smtp:
+                smtp.ehlo()
+                smtp.starttls(context=ssl.create_default_context())
+                smtp.ehlo()
+                smtp.login(smtp_username, smtp_password)
+                smtp.send_message(message)
+        except (OSError, smtplib.SMTPException) as error:
+            raise RuntimeError(f"Email delivery failed: {error}") from error
+
+    def email_failure(error: Exception) -> tuple[Any, int]:
+        return jsonify({
+            "error": f"Your request was saved, but the email could not be sent. {error}",
+            "saved": True,
+        }), 503
 
     @app.after_request
     def add_cors_headers(response: Any) -> Any:
@@ -400,11 +445,43 @@ def create_app(
         record = save_record("reset_requests", {"email": payload["email"].lower()})
         return jsonify({"request": record, "message": "If the email matches a purchase, instructions will be sent shortly."}), 202
 
+    @app.post("/api/mock-interview-requests")
+    def mock_interview_request() -> Any:
+        payload = require_json({"name", "email", "preferred_time"})
+        email = payload["email"].strip()
+        record = save_record("mock_interview_requests", {
+            "name": payload["name"].strip(),
+            "email": email,
+            "preferred_time": payload["preferred_time"].strip(),
+            "message": str(payload.get("message", "Please send me a Google Meet link for the mock interview.")).strip(),
+        })
+        body = (
+            "A new mock interview request was submitted.\n\n"
+            f"Name: {record['name']}\nEmail: {email}\n"
+            f"Preferred date/time: {record['preferred_time']}\n\n"
+            f"Message: {record['message']}\n\nPlease reply with available times and the Google Meet link."
+        )
+        try:
+            send_support_email("Mock interview / Google Meet link request", body, email)
+        except (ConfigurationError, RuntimeError, ValueError) as error:
+            return email_failure(error)
+        return jsonify({"request": record, "email_sent": True}), 201
+
     @app.post("/api/support")
     def support() -> Any:
         payload = require_json({"question"})
-        record = save_record("support_requests", payload)
-        return jsonify({"request": record}), 201
+        reply_to = str(payload.get("email", "")).strip()
+        if reply_to and any(char in reply_to for char in "\r\n"):
+            return jsonify({"error": "Reply email address is invalid."}), 400
+        record = save_record("support_requests", {
+            "question": payload["question"].strip(),
+            "email": reply_to,
+        })
+        try:
+            send_support_email("New website support request", payload["question"].strip(), reply_to or None)
+        except (ConfigurationError, RuntimeError, ValueError) as error:
+            return email_failure(error)
+        return jsonify({"request": record, "email_sent": True}), 201
 
     @app.post("/api/bookings")
     def booking() -> Any:

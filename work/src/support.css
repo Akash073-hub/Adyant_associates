@@ -40,6 +40,7 @@
 .chat-form div { display: flex; gap: 8px; }
 .chat-form input { min-width: 0; flex: 1; padding: 11px 12px; border: 1px solid #d4d4d8; border-radius: 6px; outline: 0; font-size: 13px; }
 .chat-form input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.13); }
+.chat-form .chat-email { box-sizing: border-box; width: 100%; margin-bottom: 16px; }
 .privacy-card { padding: 26px; }
 .privacy-card > p { margin: 18px 0; color: #52525b; font-size: 13px; line-height: 1.7; }
 .privacy-card ul { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; color: #3f3f46; font-size: 13px; line-height: 1.5; }

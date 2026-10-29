@@ -31,6 +31,7 @@ load_dotenv()
 
 DEFAULT_STORE: dict[str, list[dict[str, Any]]] = {
     "users": [],
+    "admins": [],
     "assessments": [],
     "support_requests": [],
     "reset_requests": [],
@@ -197,6 +198,30 @@ class GitHubStore:
                     raise
                 normalized, _ = self.read()
 
+    def write_admin_exports(self, admins: list[dict[str, Any]]) -> None:
+        """Publish successful admin sign-ins without ever storing passwords."""
+        parent = self.path.rsplit("/", 1)[0] if "/" in self.path else ""
+        json_path = f"{parent}/admin.json" if parent else "admin.json"
+        csv_path = f"{parent}/admin.csv" if parent else "admin.csv"
+        json_content = (json.dumps(admins, indent=2) + "\n").encode("utf-8")
+        csv_file = io.StringIO(newline="")
+        columns = ["id", "created_at", "email", "event"]
+        writer = csv.DictWriter(csv_file, fieldnames=columns, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(admins)
+        exports = [
+            (json_path, json_content, "Update admin login history JSON"),
+            (csv_path, csv_file.getvalue().encode("utf-8"), "Update admin login history table"),
+        ]
+        for path, content, message in exports:
+            for attempt in range(3):
+                try:
+                    self._write_file(path, content, message)
+                    break
+                except RuntimeError as error:
+                    if " (409):" not in str(error) or attempt == 2:
+                        raise
+
     @staticmethod
     def _merge_new_records(
         latest: dict[str, list[dict[str, Any]]],
@@ -302,13 +327,20 @@ def create_app(
     @app.post("/api/auth/admin-login")
     def admin_login() -> Any:
         payload = require_json({"email", "password"})
+        if not isinstance(payload["email"], str) or not isinstance(payload["password"], str):
+            return jsonify({"error": "Email and password must be text values."}), 400
         admin_password = env.get("ADMIN_PASSWORD", "")
         if not admin_password:
             raise ConfigurationError("Set ADMIN_PASSWORD to enable admin login.")
         password_matches = hmac.compare_digest(payload["password"], admin_password)
         if not password_matches:
             return jsonify({"error": "Invalid admin password."}), 401
-        return jsonify({"token": issue_token("admin")}), 200
+        token = issue_token("admin")
+        save_record("admins", {
+            "email": payload["email"].strip().lower(),
+            "event": "login_success",
+        })
+        return jsonify({"token": token}), 200
 
     @app.get("/api/videos")
     def videos() -> Any:
@@ -364,6 +396,8 @@ def create_app(
             }
             data[collection].append(record)
             persistence.write(data, sha)
+            if collection == "admins" and type(persistence).write is GitHubStore.write:
+                persistence.write_admin_exports(data["admins"])
         return record
 
     def require_json(required_fields: set[str]) -> dict[str, Any]:

@@ -21,12 +21,28 @@ import urllib.request
 from urllib.parse import urlparse
 from datetime import UTC, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from flask import Flask, jsonify, request
 from dotenv import load_dotenv
 
 
 load_dotenv()
+
+DISPLAY_TIME_ZONE = ZoneInfo("Asia/Kolkata")
+
+
+def readable_datetime(value: Any) -> str:
+    """Render stored timestamps in a human-friendly India local time."""
+    if not isinstance(value, str) or not value.strip():
+        return str(value or "")
+    try:
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=UTC)
+        return parsed.astimezone(DISPLAY_TIME_ZONE).strftime("%d %b %Y, %I:%M %p IST")
+    except ValueError:
+        return value
 
 
 DEFAULT_STORE: dict[str, list[dict[str, Any]]] = {
@@ -162,7 +178,7 @@ class GitHubStore:
         csv_path = f"{parent}/users.csv" if parent else "users.csv"
         for attempt in range(3):
             users_csv = io.StringIO(newline="")
-            columns = ["id", "created_at", "username", "email"]
+            columns = ["id", "created_at", "created_at_iso", "username", "email"]
             writer = csv.DictWriter(users_csv, fieldnames=columns, extrasaction="ignore")
             writer.writeheader()
             writer.writerows(normalized["users"])
@@ -182,7 +198,7 @@ class GitHubStore:
         assessment_path = f"{parent}/assessments.csv" if parent else "assessments.csv"
         for attempt in range(3):
             assessments_csv = io.StringIO(newline="")
-            columns = ["id", "created_at", "role", "stack", "goal"]
+            columns = ["id", "created_at", "created_at_iso", "role", "stack", "goal"]
             writer = csv.DictWriter(assessments_csv, fieldnames=columns, extrasaction="ignore")
             writer.writeheader()
             writer.writerows(normalized["assessments"])
@@ -203,9 +219,10 @@ class GitHubStore:
         parent = self.path.rsplit("/", 1)[0] if "/" in self.path else ""
         json_path = f"{parent}/admin.json" if parent else "admin.json"
         csv_path = f"{parent}/admin.csv" if parent else "admin.csv"
+        admins = self._normalise({"admins": admins})["admins"]
         json_content = (json.dumps(admins, indent=2) + "\n").encode("utf-8")
         csv_file = io.StringIO(newline="")
-        columns = ["id", "created_at", "email", "event"]
+        columns = ["id", "created_at", "created_at_iso", "email", "event"]
         writer = csv.DictWriter(csv_file, fieldnames=columns, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(admins)
@@ -259,10 +276,19 @@ class GitHubStore:
 
     @staticmethod
     def _normalise(data: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
-        return {
+        normalized = {
             key: value if isinstance(value, list) else []
             for key, value in {**DEFAULT_STORE, **data}.items()
         }
+        for records in normalized.values():
+            for record in records:
+                if not isinstance(record, dict):
+                    continue
+                timestamp = record.get("created_at_iso") or record.get("created_at")
+                if timestamp:
+                    record["created_at_iso"] = timestamp
+                    record["created_at"] = readable_datetime(timestamp)
+        return normalized
 
 
 def create_app(
@@ -389,9 +415,11 @@ def create_app(
     def save_record(collection: str, payload: dict[str, Any]) -> dict[str, Any]:
         with persistence_lock:
             data, sha = persistence.read()
+            created_at_iso = datetime.now(UTC).isoformat()
             record = {
                 "id": secrets.token_urlsafe(12),
-                "created_at": datetime.now(UTC).isoformat(),
+                "created_at": readable_datetime(created_at_iso),
+                "created_at_iso": created_at_iso,
                 **payload,
             }
             data[collection].append(record)

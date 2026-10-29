@@ -5,11 +5,14 @@ import { apiRequest } from './api';
 
 function SignIn() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
+    setAuthenticated(false);
+    setSubmitting(true);
     const form = new FormData(event.currentTarget);
     try {
       await apiRequest('/auth/login', {
@@ -22,6 +25,8 @@ function SignIn() {
       setAuthenticated(true);
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -40,7 +45,7 @@ function SignIn() {
               <SignInField name="email" label="Registered Email Address" note="IDENTITY VERIFIED" icon="✉" placeholder="you@example.com" type="email" />
               <p className="field-help"><span>ⓘ</span> Use the email linked to your program or mock interview booking.</p>
               <div className="signin-options"><label><input defaultChecked type="checkbox" /> <span>Keep this terminal session authenticated for 30 days</span></label><a href="/reset-credentials">Trouble signing in? / Reset SDET Credentials</a></div>
-              <button className="authenticate-button" type="submit"><span aria-hidden="true">▣</span> {authenticated ? 'Authenticated — Portal Ready' : 'Authenticate & Enter Portal →'}</button>
+              <button className="authenticate-button" type="submit" disabled={submitting}><span aria-hidden="true">▣</span> {submitting ? 'Authenticating…' : authenticated ? 'Authenticated — Portal Ready' : 'Authenticate & Enter Portal →'}</button>
               {error && <p className="field-help" role="alert">{error}</p>}
             </form>
           </section>

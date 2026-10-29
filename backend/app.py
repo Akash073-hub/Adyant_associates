@@ -174,6 +174,26 @@ class GitHubStore:
                     raise
                 normalized, _ = self.read()
 
+        # Keep assessment submissions in their own easy-to-review GitHub table.
+        assessment_path = f"{parent}/assessments.csv" if parent else "assessments.csv"
+        for attempt in range(3):
+            assessments_csv = io.StringIO(newline="")
+            columns = ["id", "created_at", "role", "stack", "goal"]
+            writer = csv.DictWriter(assessments_csv, fieldnames=columns, extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(normalized["assessments"])
+            try:
+                self._write_file(
+                    assessment_path,
+                    assessments_csv.getvalue().encode("utf-8"),
+                    "Update assessment submissions table",
+                )
+                break
+            except RuntimeError as error:
+                if " (409):" not in str(error) or attempt == 2:
+                    raise
+                normalized, _ = self.read()
+
     @staticmethod
     def _merge_new_records(
         latest: dict[str, list[dict[str, Any]]],

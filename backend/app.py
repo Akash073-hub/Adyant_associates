@@ -7,6 +7,7 @@ read only by this process and must never be exposed to the React application.
 from __future__ import annotations
 
 import base64
+import binascii
 import csv
 import hashlib
 import hmac
@@ -17,6 +18,7 @@ import secrets
 import threading
 import urllib.error
 import urllib.request
+from urllib.parse import urlparse
 from datetime import UTC, datetime
 from typing import Any
 
@@ -33,6 +35,7 @@ DEFAULT_STORE: dict[str, list[dict[str, Any]]] = {
     "support_requests": [],
     "reset_requests": [],
     "bookings": [],
+    "videos": [],
 }
 
 PROGRAMS = [
@@ -259,7 +262,7 @@ def create_app(
         if origin in app.config["CORS_ORIGINS"]:
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Vary"] = "Origin"
-            response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
             response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         return response
 
@@ -270,6 +273,10 @@ def create_app(
     @app.errorhandler(RuntimeError)
     def runtime_error(error: RuntimeError) -> tuple[Any, int]:
         return jsonify({"error": str(error)}), 502
+
+    @app.errorhandler(PermissionError)
+    def permission_error(error: PermissionError) -> tuple[Any, int]:
+        return jsonify({"error": str(error)}), 401
 
     @app.get("/api/health")
     def health() -> Any:
@@ -295,15 +302,37 @@ def create_app(
     @app.post("/api/auth/admin-login")
     def admin_login() -> Any:
         payload = require_json({"email", "password"})
-        admin_email = env.get("ADMIN_EMAIL", "").strip().lower()
         admin_password = env.get("ADMIN_PASSWORD", "")
-        if not admin_email or not admin_password:
-            raise ConfigurationError("Set ADMIN_EMAIL and ADMIN_PASSWORD to enable admin login.")
-        email_matches = hmac.compare_digest(payload["email"].strip().lower(), admin_email)
+        if not admin_password:
+            raise ConfigurationError("Set ADMIN_PASSWORD to enable admin login.")
         password_matches = hmac.compare_digest(payload["password"], admin_password)
-        if not (email_matches and password_matches):
-            return jsonify({"error": "Invalid admin email or password."}), 401
-        return jsonify({"token": issue_token(f"admin:{admin_email}")}), 200
+        if not password_matches:
+            return jsonify({"error": "Invalid admin password."}), 401
+        return jsonify({"token": issue_token("admin")}), 200
+
+    @app.get("/api/videos")
+    def videos() -> Any:
+        data, _ = persistence.read()
+        return jsonify({"videos": data["videos"]})
+
+    @app.route("/api/admin/videos", methods=["GET", "POST"])
+    def manage_videos() -> Any:
+        require_admin()
+        if request.method == "GET":
+            data, _ = persistence.read()
+            return jsonify({"videos": data["videos"]})
+
+        payload = require_json({"title", "url"})
+        url = payload["url"].strip()
+        parsed_url = urlparse(url)
+        if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+            return jsonify({"error": "Video URL must start with http:// or https://."}), 400
+        record = save_record("videos", {
+            "title": payload["title"].strip(),
+            "url": url,
+            "description": str(payload.get("description", "")).strip(),
+        })
+        return jsonify({"video": record}), 201
 
     @app.post("/api/auth/reset")
     def reset() -> Any:
@@ -358,6 +387,29 @@ def create_app(
         message = f"{user_id}.{timestamp}".encode()
         signature = hmac.new(app.config["SECRET_KEY"].encode(), message, hashlib.sha256).hexdigest()
         return base64.urlsafe_b64encode(f"{user_id}.{timestamp}.{signature}".encode()).decode()
+
+    def require_admin() -> None:
+        authorization = request.headers.get("Authorization", "")
+        token = authorization.removeprefix("Bearer ").strip()
+        try:
+            decoded = base64.urlsafe_b64decode(token.encode()).decode()
+            user_id, timestamp, supplied_signature = decoded.rsplit(".", 2)
+            message = f"{user_id}.{timestamp}".encode()
+            expected_signature = hmac.new(
+                app.config["SECRET_KEY"].encode(), message, hashlib.sha256
+            ).hexdigest()
+            token_age = datetime.now(UTC).timestamp() - int(timestamp)
+            valid = (
+                user_id == "admin"
+                and token_age >= 0
+                and token_age <= 12 * 60 * 60
+                and hmac.compare_digest(supplied_signature, expected_signature)
+            )
+        except (ValueError, UnicodeDecodeError, binascii.Error):
+            valid = False
+        if not valid:
+            return_error = {"error": "Admin session is missing or expired. Please sign in again."}
+            raise PermissionError(return_error["error"])
 
     return app
 

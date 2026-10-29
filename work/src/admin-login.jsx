@@ -5,13 +5,11 @@ import { apiRequest } from './api';
 
 function AdminLogin() {
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
-    setMessage('');
     setSubmitting(true);
     const form = new FormData(event.currentTarget);
     try {
@@ -20,7 +18,7 @@ function AdminLogin() {
         body: JSON.stringify({ email: form.get('email'), password: form.get('password') }),
       });
       sessionStorage.setItem('adminToken', result.token);
-      setMessage('Admin credentials verified.');
+      window.location.href = '/admin';
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -43,7 +41,6 @@ function AdminLogin() {
           <a className="admin-forgot" href="/support">Forgot your password? Contact support</a>
           <button className="authenticate-button" type="submit" disabled={submitting}>{submitting ? 'Signing in…' : 'Sign in as admin →'}</button>
           {error && <p className="field-help" role="alert">{error}</p>}
-          {message && <p className="field-help" role="status">{message}</p>}
         </form>
         <a className="access-back" href="/">← Back to access options</a>
       </section>

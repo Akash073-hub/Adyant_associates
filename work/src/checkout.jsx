@@ -32,7 +32,7 @@ function Checkout() {
   };
 
   return <div className="checkout-page">
-    <SiteNav active="mock" coursesHref="/membership#curriculum" mockHref="/checkout" ctaHref="/checkout" />
+    <SiteNav active="mock" coursesHref="/membership#curriculum" mockHref="/mock-interview" ctaHref="/checkout" />
     <div className="checkout-subbar"><div><span>Programs</span><i>/</i><span>Book your mock interview</span><i>/</i><b>Secure booking</b></div><strong><i /> Your booking is reserved for <em>{countdown}</em> mins</strong></div>
     <main className="checkout-main"><div className="checkout-title"><span>BOOKING PROTOCOL // LIVE MOCK INTERVIEW</span><h1>Book Your Live Mock Interview</h1><p>Reserve a live mock interview, answer realistic questions, and receive direct feedback to improve your interview performance.</p></div><div className="checkout-grid"><PaymentPanel method={method} setMethod={setMethod} copied={copied} copyUpi={copyUpi} /><OrderSummary confirmed={confirmed} setConfirmed={setConfirmed} /></div></main>
     <footer className="checkout-footer"><div><b>Adyant Associates</b><span>|</span><p>© 2026 Adyant Associates. QA leadership and interview preparation support.</p></div><nav><a href="/membership#curriculum">Programs</a><a href="/membership#classroom-preview">Preview</a><a href="/membership#faq">FAQs</a><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a></nav></footer>

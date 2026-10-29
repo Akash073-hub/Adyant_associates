@@ -6,7 +6,7 @@ function Syllabus() {
   useSearchTarget();
   return (
     <div className="syllabus-page">
-      <SiteNav active="courses" coursesHref="/membership#curriculum" mockHref="/home#batches" ctaHref="/checkout" />
+      <SiteNav active="courses" coursesHref="/membership#curriculum" mockHref="/mock-interview" ctaHref="/checkout" />
 
       <main className="syllabus-content">
         <span className="syllabus-label">AI FOR QA MANAGERS // SYLLABUS</span>

@@ -107,7 +107,7 @@ function Support() {
   useSearchTarget();
   return (
     <div className="support-page">
-      <SiteNav active="support" coursesHref="/membership#curriculum" mockHref="/home#batches" ctaHref={`mailto:${SUPPORT_EMAIL}`} ctaLabel="Email support" showCta />
+      <SiteNav active="support" coursesHref="/membership#curriculum" mockHref="/mock-interview" ctaHref={`mailto:${SUPPORT_EMAIL}`} ctaLabel="Email support" showCta />
 
       <main>
         <section className="support-hero" id="support-hero" tabIndex={-1}>

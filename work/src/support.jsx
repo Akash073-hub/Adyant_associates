@@ -27,6 +27,7 @@ function findCourse(question) {
 
 function Chatbot() {
   const [question, setQuestion] = useState('');
+  const [email, setEmail] = useState('');
   const [messages, setMessages] = useState(initialMessages);
   const [error, setError] = useState('');
 
@@ -38,7 +39,7 @@ function Chatbot() {
     try {
       await apiRequest('/support', {
         method: 'POST',
-        body: JSON.stringify({ question: trimmedQuestion }),
+        body: JSON.stringify({ question: trimmedQuestion, email: email.trim() }),
       });
     } catch (requestError) {
       setError(requestError.message);
@@ -48,10 +49,10 @@ function Chatbot() {
     const matchedCourse = findCourse(trimmedQuestion);
     const asksAboutCourses = /course|program|class|training|learn|syllabus/i.test(trimmedQuestion);
     const answer = matchedCourse
-      ? `I found ${matchedCourse} in our programs. I’ll take you to the courses page so you can explore it.`
+      ? `I sent your question to support at ${SUPPORT_EMAIL}. I also found ${matchedCourse}; I’ll take you to the courses page so you can explore it.`
       : asksAboutCourses
-        ? `I couldn't find that course in our current programs. For better support, please email ${SUPPORT_EMAIL} and a real person will help you.`
-        : `For better support with that question, please email ${SUPPORT_EMAIL}. A real person will get back to you.`;
+        ? `I couldn't find that course in our current programs, so I sent your question to ${SUPPORT_EMAIL}. A real person will follow up.`
+        : `I sent your question to ${SUPPORT_EMAIL}. A real person will follow up.`;
 
     setMessages((currentMessages) => [
       ...currentMessages,
@@ -59,6 +60,7 @@ function Chatbot() {
       { from: 'bot', text: answer, courseLink: Boolean(matchedCourse) },
     ]);
     setQuestion('');
+    setEmail('');
     if (matchedCourse) {
       window.setTimeout(() => {
       window.location.href = '/home#courses';
@@ -87,12 +89,23 @@ function Chatbot() {
         ))}
       </div>
       <form className="chat-form" onSubmit={handleSubmit}>
+        <label htmlFor="support-email">Your email, so we can reply</label>
+        <input
+          className="chat-email"
+          id="support-email"
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="you@example.com"
+          required
+          type="email"
+          value={email}
+        />
         <label htmlFor="support-question">Your question</label>
         <div>
           <input
             id="support-question"
             onChange={(event) => setQuestion(event.target.value)}
             placeholder="Ask about a course or anything else..."
+            required
             value={question}
           />
           <button className="dark-button" type="submit">Send</button>
@@ -107,14 +120,14 @@ function Support() {
   useSearchTarget();
   return (
     <div className="support-page">
-      <SiteNav active="support" coursesHref="/membership#curriculum" mockHref="/mock-interview" ctaHref={`mailto:${SUPPORT_EMAIL}`} ctaLabel="Email support" showCta />
+      <SiteNav active="support" coursesHref="/membership#curriculum" mockHref="/mock-interview" ctaHref="#support-chat" ctaLabel="Send support request" showCta />
 
       <main>
         <section className="support-hero" id="support-hero" tabIndex={-1}>
           <span className="support-label">Support desk / Privacy</span>
           <h1>Clear answers, thoughtful support.</h1>
           <p>Use the chatbot for quick guidance, or contact a real person whenever you need more help with Adyant Associates.</p>
-          <a className="support-email" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL} ↗</a>
+          <a className="support-email" href="#support-chat">{SUPPORT_EMAIL} · Send a message ↗</a>
         </section>
 
         <div className="support-layout">
@@ -130,7 +143,7 @@ function Support() {
             </ul>
             <div className="privacy-contact">
               <strong>Need personal help?</strong>
-              <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+              <a href="#support-chat">{SUPPORT_EMAIL}</a>
             </div>
           </aside>
         </div>

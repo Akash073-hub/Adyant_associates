@@ -272,6 +272,19 @@ def create_app(
         record = save_record("users", {"username": payload["username"], "email": email})
         return jsonify({"user": record, "token": issue_token(record["id"])}), 200
 
+    @app.post("/api/auth/admin-login")
+    def admin_login() -> Any:
+        payload = require_json({"email", "password"})
+        admin_email = env.get("ADMIN_EMAIL", "").strip().lower()
+        admin_password = env.get("ADMIN_PASSWORD", "")
+        if not admin_email or not admin_password:
+            raise ConfigurationError("Set ADMIN_EMAIL and ADMIN_PASSWORD to enable admin login.")
+        email_matches = hmac.compare_digest(payload["email"].strip().lower(), admin_email)
+        password_matches = hmac.compare_digest(payload["password"], admin_password)
+        if not (email_matches and password_matches):
+            return jsonify({"error": "Invalid admin email or password."}), 401
+        return jsonify({"token": issue_token(f"admin:{admin_email}")}), 200
+
     @app.post("/api/auth/reset")
     def reset() -> Any:
         payload = require_json({"email"})

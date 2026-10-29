@@ -10,6 +10,7 @@ import Support from './support';
 import AccessPortal from './access-portal';
 import AdminLogin from './admin-login';
 import AdminVideos from './admin-videos';
+import MockInterview from './mock-interview';
 
 function App() {
   const isHomePage = window.location.pathname === '/home';
@@ -20,6 +21,7 @@ function App() {
   const isResetCredentialsPage = window.location.pathname === '/reset-credentials';
   const isMembershipPage = window.location.pathname === '/membership';
   const isCheckoutPage = window.location.pathname === '/checkout';
+  const isMockInterviewPage = window.location.pathname === '/mock-interview';
   const isAiQaSyllabusPage = window.location.pathname === '/syllabus/ai-for-qa-managers';
   const isSupportPage = ['/support', '/privacy'].includes(window.location.pathname);
   if (isStudentAccessPage) return <AccessPortal view="student" />;
@@ -28,6 +30,7 @@ function App() {
   if (isLoginPage) return <SignIn />;
   if (isResetCredentialsPage) return <ResetCredentials />;
   if (isMembershipPage) return <Membership />;
+  if (isMockInterviewPage) return <MockInterview />;
   if (isCheckoutPage) return <Checkout />;
   if (isAiQaSyllabusPage) return <Syllabus />;
   if (isSupportPage) return <Support />;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { navigateToSearch } from './search-navigation';
 
-function SiteNav({ active, searchValue, onSearchChange, onSearchSubmit, coursesHref = '/home#courses', mockHref = '/home#batches', ctaHref = '/membership#curriculum', ctaLabel = 'Book Your Mock Interview', showCta = active === 'home' || ctaLabel === 'Email support', showLogin = active !== 'support' && active !== 'memberships' }) {
+function SiteNav({ active, searchValue, onSearchChange, onSearchSubmit, coursesHref = '/home#courses', mockHref = '/mock-interview', ctaHref = '/membership#curriculum', ctaLabel = 'Book Your Mock Interview', showCta = active === 'home' || ctaLabel === 'Email support', showLogin = active !== 'support' && active !== 'memberships' }) {
   const [internalSearch, setInternalSearch] = useState('');
   const currentSearch = searchValue ?? internalSearch;
 

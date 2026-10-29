@@ -32,7 +32,7 @@ function SignIn() {
 
   return (
     <div className="signin-page">
-      <SiteNav active="" coursesHref="/membership#curriculum" mockHref="/home#batches" ctaHref="/checkout" showLogin={false} />
+      <SiteNav active="" coursesHref="/membership#curriculum" mockHref="/mock-interview" ctaHref="/checkout" showLogin={false} />
 
       <main className="signin-main">
         <div className="signin-wrap">

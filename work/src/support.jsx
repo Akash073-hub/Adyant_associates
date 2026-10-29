@@ -61,7 +61,7 @@ function Chatbot() {
     setQuestion('');
     if (matchedCourse) {
       window.setTimeout(() => {
-        window.location.href = '/#courses';
+      window.location.href = '/home#courses';
       }, 350);
     }
   }
@@ -81,7 +81,7 @@ function Chatbot() {
             <span className="chat-avatar">{message.from === 'bot' ? 'A' : 'You'}</span>
             <div>
               <p>{message.text}</p>
-              {message.courseLink && <a className="chat-course-link" href="/#courses">View courses →</a>}
+              {message.courseLink && <a className="chat-course-link" href="/home#courses">View courses →</a>}
             </div>
           </div>
         ))}
@@ -107,7 +107,7 @@ function Support() {
   useSearchTarget();
   return (
     <div className="support-page">
-      <SiteNav active="support" coursesHref="/membership#curriculum" mockHref="/#batches" ctaHref={`mailto:${SUPPORT_EMAIL}`} ctaLabel="Email support" showCta />
+      <SiteNav active="support" coursesHref="/membership#curriculum" mockHref="/home#batches" ctaHref={`mailto:${SUPPORT_EMAIL}`} ctaLabel="Email support" showCta />
 
       <main>
         <section className="support-hero" id="support-hero" tabIndex={-1}>
@@ -138,7 +138,7 @@ function Support() {
 
       <footer className="support-footer">
         <span>© 2026 Adyant Associates</span>
-        <a href="/">Back to home</a>
+        <a href="/home">Back to home</a>
       </footer>
     </div>
   );

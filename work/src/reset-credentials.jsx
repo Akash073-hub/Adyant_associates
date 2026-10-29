@@ -25,7 +25,7 @@ function ResetCredentials() {
 
   return (
     <div className="signin-page">
-      <SiteNav active="" coursesHref="/membership#curriculum" mockHref="/#batches" ctaHref="/checkout" showLogin={false} />
+      <SiteNav active="" coursesHref="/membership#curriculum" mockHref="/home#batches" ctaHref="/checkout" showLogin={false} />
       <main className="signin-main">
         <div className="signin-wrap">
           <div className="protocol-line"><span>{'// CREDENTIAL RECOVERY PROTOCOL // MEMBER IDENTITY VERIFICATION'}</span></div>

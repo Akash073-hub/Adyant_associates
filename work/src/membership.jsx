@@ -36,7 +36,7 @@ function Membership() {
     `${title} ${text} ${tags.join(' ')}`.toLowerCase().includes(search.toLowerCase()),
   );
   return <div className="courses-page">
-    <SiteNav active="memberships" coursesHref="/membership#curriculum" mockHref="/#batches" ctaHref="/checkout" searchValue={search} onSearchChange={(event) => setSearch(event.target.value)} />
+    <SiteNav active="memberships" coursesHref="/membership#curriculum" mockHref="/home#batches" ctaHref="/checkout" searchValue={search} onSearchChange={(event) => setSearch(event.target.value)} />
     <main id="top">
       <section className="courses-hero"><div className="courses-inner"><div className="courses-tag"><span /> {'// QA LEADERSHIP & INTERVIEW SUPPORT'}</div><h1>Focused preparation.<br /><em>Confident performance.</em></h1><p>Choose from three focused programs designed to help QA managers and quality engineers lead with AI, prepare for interviews, and practice with expert feedback.</p><div className="course-metrics"><Metric label="PROGRAMS" value="3" text="Focused offerings" /><Metric label="PRACTICE" value="1:1" text="Mock interview support" /><Metric label="GUIDANCE" value="100%" text="Action-oriented" /><Metric label="BOOKING" value="OPEN" text="Reserve your mock" /></div></div></section>
       <section className="courses-section pedagogy-section" id="pedagogy"><SectionIntro label="01 // PEDAGOGICAL FRAMEWORK — HOW WE TEACH" title="Engineering Rigor Over Superficial Tutorials" text="We bridge the gap between superficial tutorial scripts and resilient enterprise frameworks through five core architectural disciplines." /><div className="principles-grid">{principles.map(([label, title, text, footer], index) => <article className={`principle principle-${index}`} key={title}><span className="principle-label">{label}</span><h3>{title}</h3><p>{text}</p><footer>⌁ {footer}</footer></article>)}</div></section>
@@ -44,7 +44,7 @@ function Membership() {
       <section className="courses-section classroom-section" id="classroom-preview"><SectionIntro label="03 // PREVIEW" title="See how focused preparation works" text="Preview a practical session built around clear examples, realistic interview prompts, and direct feedback." /><div className="classroom-grid"><VideoPreview playing={playing} onToggle={() => setPlaying(!playing)} /><ChapterList /></div></section>
       <section className="courses-section faq-section" id="faq"><SectionIntro label="04 // PROGRAM FAQs" title="Frequently Addressed Inquiries" text="Clear answers about choosing a program, preparing for interviews, and booking your mock session." /><div className="faq-list">{faqs.map(([question, answer], index) => <details open={index === 0} key={question}><summary>{question}<b>⌄</b></summary><p>{answer}</p></details>)}</div></section>
     </main>
-    <footer className="courses-footer"><div><a className="courses-brand" href="/"><span /> Adyant Associates</a><small>© 2026 Adyant Associates. All rights reserved.</small></div><nav><a href="/support">Privacy Policy</a><a href="#faq">Terms of Service</a></nav></footer>
+    <footer className="courses-footer"><div><a className="courses-brand" href="/home"><span /> Adyant Associates</a><small>© 2026 Adyant Associates. All rights reserved.</small></div><nav><a href="/support">Privacy Policy</a><a href="#faq">Terms of Service</a></nav></footer>
   </div>;
 }
 

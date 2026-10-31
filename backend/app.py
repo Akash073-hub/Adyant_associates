@@ -52,6 +52,7 @@ def split_datetime(value: Any) -> tuple[str, str]:
 
 DEFAULT_STORE: dict[str, list[dict[str, Any]]] = {
     "users": [],
+    "student_leads": [],
     "admins": [],
     "assessments": [],
     "support_requests": [],
@@ -219,6 +220,53 @@ class GitHubStore:
                 if " (409):" not in str(error) or attempt == 2:
                     raise
                 normalized, _ = self.read()
+
+        # Keep student browse sign-ups separate from member and assessment records.
+        student_leads_path = f"{parent}/student_leads.csv" if parent else "student_leads.csv"
+        for attempt in range(3):
+            student_leads_csv = io.StringIO(newline="")
+            columns = ["id", "created_date", "created_time", "email", "interest", "current_status", "current_status_details"]
+            writer = csv.DictWriter(student_leads_csv, fieldnames=columns, extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(normalized["student_leads"])
+            try:
+                self._write_file(
+                    student_leads_path,
+                    student_leads_csv.getvalue().encode("utf-8"),
+                    "Update student browse sign-ups table",
+                )
+                break
+            except RuntimeError as error:
+                if " (409):" not in str(error) or attempt == 2:
+                    raise
+                normalized, _ = self.read()
+
+        # Publish the remaining submitted records as their own GitHub tables.
+        table_exports = {
+            "support_requests": ["id", "created_date", "created_time", "email", "question"],
+            "mock_interview_requests": ["id", "created_date", "created_time", "name", "email", "preferred_time", "message"],
+            "reset_requests": ["id", "created_date", "created_time", "email"],
+            "bookings": ["id", "created_date", "created_time", "email", "payment_method", "status"],
+            "videos": ["id", "created_date", "created_time", "title", "url", "description"],
+        }
+        for collection, columns in table_exports.items():
+            csv_path = f"{parent}/{collection}.csv" if parent else f"{collection}.csv"
+            for attempt in range(3):
+                records_csv = io.StringIO(newline="")
+                writer = csv.DictWriter(records_csv, fieldnames=columns, extrasaction="ignore")
+                writer.writeheader()
+                writer.writerows(normalized[collection])
+                try:
+                    self._write_file(
+                        csv_path,
+                        records_csv.getvalue().encode("utf-8"),
+                        f"Update {collection.replace('_', ' ')} table",
+                    )
+                    break
+                except RuntimeError as error:
+                    if " (409):" not in str(error) or attempt == 2:
+                        raise
+                    normalized, _ = self.read()
 
     def write_admin_exports(self, admins: list[dict[str, Any]]) -> None:
         """Publish successful admin sign-ins without ever storing passwords."""
@@ -392,10 +440,34 @@ def create_app(
 
     @app.post("/api/auth/login")
     def login() -> Any:
-        payload = require_json({"username", "email"})
-        email = payload["email"].lower()
-        record = save_record("users", {"username": payload["username"], "email": email})
-        return jsonify({"user": record, "token": issue_token(record["id"])}), 200
+        payload = require_json({"email"})
+        email = payload["email"].strip().lower()
+        data, _ = persistence.read()
+        is_member = any(
+            user.get("email", "").strip().lower() == email and user.get("is_member") is True
+            for user in data["users"]
+        ) or any(
+            booking.get("email", "").strip().lower() == email
+            and booking.get("status", "").lower() in {"paid", "confirmed", "active"}
+            for booking in data["bookings"]
+        )
+        if not is_member:
+            return jsonify({"member": False, "message": "We couldn't find an active membership for this email. Browse as a student or contact support if you believe this is a mistake."}), 403
+        return jsonify({"member": True, "message": "An active membership was found for this email."}), 200
+
+    @app.post("/api/student-leads")
+    def student_lead() -> Any:
+        payload = require_json({"email"})
+        email = payload["email"].strip().lower()
+        if "@" not in email:
+            return jsonify({"error": "Enter a valid email address."}), 400
+        record = save_record("student_leads", {
+            "email": email,
+            "interest": str(payload.get("interest", "")).strip(),
+            "current_status": str(payload.get("current_status", "")).strip(),
+            "current_status_details": str(payload.get("current_status_details", "")).strip(),
+        })
+        return jsonify({"lead": record}), 201
 
     @app.post("/api/auth/admin-login")
     def admin_login() -> Any:

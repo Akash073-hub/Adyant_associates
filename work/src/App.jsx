@@ -15,6 +15,7 @@ import MockInterview from './mock-interview';
 function App() {
   const isHomePage = window.location.pathname === '/home';
   const isStudentAccessPage = window.location.pathname === '/student-login';
+  const isBrowseStudentPage = window.location.pathname === '/browse';
   const isAdminLoginPage = window.location.pathname === '/admin-login';
   const isAdminPage = window.location.pathname === '/admin';
   const isLoginPage = window.location.pathname === '/login';
@@ -25,6 +26,7 @@ function App() {
   const isAiQaSyllabusPage = window.location.pathname === '/syllabus/ai-for-qa-managers';
   const isSupportPage = ['/support', '/privacy'].includes(window.location.pathname);
   if (isStudentAccessPage) return <AccessPortal view="student" />;
+  if (isBrowseStudentPage) return <AccessPortal view="browse" />;
   if (isAdminLoginPage) return <AdminLogin />;
   if (isAdminPage) return <AdminVideos />;
   if (isLoginPage) return <SignIn />;

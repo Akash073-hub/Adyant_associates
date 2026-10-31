@@ -18,7 +18,6 @@ function SignIn() {
       await apiRequest('/auth/login', {
         method: 'POST',
         body: JSON.stringify({
-          username: form.get('username'),
           email: form.get('email'),
         }),
       });
@@ -41,11 +40,10 @@ function SignIn() {
             <div className="signin-accent" />
             <div className="signin-intro"><h1>Sign In to Your QA Career Portal</h1><p>Access your AI for QA Managers guidance, interview preparation resources, and mock interview booking details.</p></div>
             <form className="signin-form" onSubmit={handleSubmit}>
-              <SignInField name="username" label="Candidate Handle / Username" note="sdet_id / LDAP" icon="@" placeholder="alex.rivera.sdet" type="text" valid />
-              <SignInField name="email" label="Registered Email Address" note="IDENTITY VERIFIED" icon="✉" placeholder="you@example.com" type="email" />
-              <p className="field-help"><span>ⓘ</span> Use the email linked to your program or mock interview booking.</p>
-              <div className="signin-options"><label><input defaultChecked type="checkbox" /> <span>Keep this terminal session authenticated for 30 days</span></label><a href="/reset-credentials">Trouble signing in? / Reset SDET Credentials</a></div>
-              <button className="authenticate-button" type="submit" disabled={submitting}><span aria-hidden="true">▣</span> {submitting ? 'Authenticating…' : authenticated ? 'Authenticated — Portal Ready' : 'Authenticate & Enter Portal →'}</button>
+              <SignInField name="email" label="Email address used for your program" note="REQUIRED" icon="✉" placeholder="you@example.com" type="email" />
+              <p className="field-help"><span>ⓘ</span> We’ll check whether this email has an active membership.</p>
+              <button className="authenticate-button" type="submit" disabled={submitting}><span aria-hidden="true">▣</span> {submitting ? 'Checking membership…' : authenticated ? 'Membership verified' : 'Check member access →'}</button>
+              {authenticated && <p className="field-help" role="status">Membership found. Full member account access will be available once account sign-in is enabled.</p>}
               {error && <p className="field-help" role="alert">{error}</p>}
             </form>
           </section>

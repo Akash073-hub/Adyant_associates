@@ -48,14 +48,41 @@ class ApiTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
-    def test_login_returns_signed_token(self):
+    def test_member_login_confirms_active_membership(self):
+        self.store.data = {
+            "users": [{"id": "member-1", "email": "alex@example.com", "is_member": True}]
+        }
         response = self.client.post(
             "/api/auth/login",
-            json={"username": "alex.sdet", "email": "Alex@Example.com"},
+            json={"email": "Alex@Example.com"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.json["token"])
-        self.assertEqual(self.store.data["users"][0]["email"], "alex@example.com")
+        self.assertTrue(response.json["member"])
+
+    def test_member_login_rejects_non_member(self):
+        response = self.client.post(
+            "/api/auth/login",
+            json={"email": "visitor@example.com"},
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(response.json["member"])
+
+    def test_student_lead_saves_optional_fields(self):
+        response = self.client.post(
+            "/api/student-leads",
+            json={
+                "email": "Student@Example.com",
+                "interest": "Agentic AI Engineering",
+                "current_status": "College / university student",
+                "current_status_details": "Studying computer science",
+            },
+        )
+        self.assertEqual(response.status_code, 201)
+        lead = self.store.data["student_leads"][0]
+        self.assertEqual(lead["email"], "student@example.com")
+        self.assertEqual(lead["interest"], "Agentic AI Engineering")
+        self.assertEqual(lead["current_status"], "College / university student")
+        self.assertEqual(lead["current_status_details"], "Studying computer science")
 
     def test_missing_github_configuration_is_explicit(self):
         client = create_app({"SECRET_KEY": "test-secret", "CORS_ORIGINS": "*"}).test_client()

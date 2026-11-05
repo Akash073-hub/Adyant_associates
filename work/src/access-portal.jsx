@@ -14,9 +14,11 @@ function AccessPortal({ view = 'welcome' }) {
     setBusy(true); setError('');
     const form = new FormData(event.currentTarget);
     try {
-      await apiRequest('/student-leads', { method: 'POST', body: JSON.stringify({ email: form.get('email'), interest: form.get('interest'), current_status: form.get('current_status'), current_status_details: form.get('current_status_details') }) });
+      const email = String(form.get('email')).trim().toLowerCase();
+      await apiRequest('/student-leads', { method: 'POST', body: JSON.stringify({ email, interest: form.get('interest'), current_status: form.get('current_status'), current_status_details: form.get('current_status_details') }) });
       setSubmitted(true);
-      window.location.assign('/home');
+      window.localStorage.setItem('adyant_student_email', email);
+      window.location.assign('/student-portal');
     } catch (requestError) { setError(requestError.message); }
     finally { setBusy(false); }
   }

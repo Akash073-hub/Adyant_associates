@@ -12,7 +12,9 @@ export async function apiRequest(path, options = {}) {
   }
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(body.error || `Request failed with status ${response.status}`);
+    const error = new Error(body.error || `Request failed with status ${response.status}`);
+    Object.assign(error, body);
+    throw error;
   }
   return body;
 }

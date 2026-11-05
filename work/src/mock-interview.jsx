@@ -8,12 +8,16 @@ const CONTACT_EMAIL = 'akashrbhat73@gmail.com';
 function MockInterview() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailWarning, setEmailWarning] = useState('');
   const [error, setError] = useState('');
 
   async function handleSubmit(event) {
     event.preventDefault();
     setSubmitting(true);
     setSubmitted(false);
+    setEmailSent(false);
+    setEmailWarning('');
     setError('');
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
@@ -23,13 +27,19 @@ function MockInterview() {
         body: JSON.stringify({
           name: form.get('name'),
           email: form.get('email'),
-          preferred_time: form.get('preferred_time'),
         }),
       });
       setSubmitted(true);
+      setEmailSent(true);
       formElement.reset();
     } catch (requestError) {
-      setError(requestError.message);
+      if (requestError.saved) {
+        setSubmitted(true);
+        setEmailWarning('Your request was saved, but the team email could not be sent. The site owner needs to configure SMTP in backend/.env.');
+        formElement.reset();
+      } else {
+        setError(requestError.message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -53,12 +63,11 @@ function MockInterview() {
             <input id="request-name" name="name" type="text" maxLength="120" required />
             <label htmlFor="request-email">Your email</label>
             <input id="request-email" name="email" type="email" maxLength="254" required />
-            <label htmlFor="preferred-time">Preferred date and time</label>
-            <input id="preferred-time" name="preferred_time" type="datetime-local" required />
             <button className="mock-request" type="submit" disabled={submitting}>
               {submitting ? 'Sending request…' : submitted ? 'Request sent ✓' : 'Request a Google Meet link →'}
             </button>
-            {submitted && <p className="mock-status" role="status">Your request was emailed to {CONTACT_EMAIL}.</p>}
+            {submitted && <p className="mock-status" role="status">{emailSent ? `Your request was emailed to ${CONTACT_EMAIL}. We’ll reply with available times and the Google Meet link.` : 'Your request was saved.'}</p>}
+            {emailWarning && <p className="mock-error" role="alert">{emailWarning}</p>}
             {error && <p className="mock-error" role="alert">{error}</p>}
           </form>
           <p className="mock-note">We’ll email you available times and the Google Meet link.</p>

@@ -504,6 +504,60 @@
   border-radius: 4px;
   font: 10px 'JetBrains Mono',monospace;
 }
+.booking-contact{
+  display:grid;
+  gap:7px;
+  padding:17px 0;
+  margin:0;
+  border:0;
+  border-bottom:1px solid var(--x-line);
+}
+.booking-contact legend{
+  padding:0;
+  color:#737686;
+  font:10px 'JetBrains Mono',monospace;
+  letter-spacing:.08em;
+}
+.booking-contact label{
+  margin-top:5px;
+  color:var(--x-muted);
+  font-size:11px;
+  font-weight:600;
+}
+.booking-contact input{
+  width:100%;
+  min-height:38px;
+  padding:8px 10px;
+  color:var(--x-ink);
+  background:#fff;
+  border:1px solid var(--x-line);
+  border-radius:4px;
+  font:11px Inter,sans-serif;
+}
+.checkout-feedback{
+  margin:8px 0 0;
+  font-size:11px;
+  line-height:1.5;
+}
+.checkout-feedback.success{color:#167652}
+.checkout-feedback.error{color:#b42318}
+.booking-result{
+  display:grid;
+  gap:5px;
+  padding:11px;
+  margin-top:14px;
+  color:#24543f;
+  background:#edf9f2;
+  border:1px solid #b9e3c9;
+  border-radius:4px;
+  font-size:10px;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+.booking-result strong{font-size:12px}
+.booking-result span{font-family:Inter,sans-serif}
+.applied-discount{color:var(--x-primary)!important}
+.confirm:disabled{opacity:.65;cursor:wait}
 .pricing{
   padding-top: 17px;
 }

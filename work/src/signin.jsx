@@ -21,7 +21,10 @@ function SignIn() {
           email: form.get('email'),
         }),
       });
-      setAuthenticated(true);
+      const email = String(form.get('email')).trim().toLowerCase();
+      window.localStorage.setItem('adyant_member_email', email);
+      window.localStorage.setItem('adyant_student_email', email);
+      window.location.assign('/student-portal');
     } catch (requestError) {
       setError(requestError.message);
     } finally {

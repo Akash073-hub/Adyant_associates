@@ -3,6 +3,7 @@ import { navigateToSearch } from './search-navigation';
 
 function SiteNav({ active, searchValue, onSearchChange, onSearchSubmit, coursesHref = '/home#courses', mockHref = '/mock-interview', ctaHref = '/membership#curriculum', ctaLabel = 'Book Your Mock Interview', showCta = active === 'home' || ctaLabel === 'Email support', showLogin = active !== 'support' && active !== 'memberships' }) {
   const [internalSearch, setInternalSearch] = useState('');
+  const memberEmail = window.localStorage.getItem('adyant_member_email');
   const currentSearch = searchValue ?? internalSearch;
 
   function handleSearchChange(event) {
@@ -36,7 +37,7 @@ function SiteNav({ active, searchValue, onSearchChange, onSearchSubmit, coursesH
           <button aria-label="Submit search" className="search-submit" type="submit">⌕</button>
           <input aria-label="Search programs" onChange={handleSearchChange} placeholder="Search programs..." type="search" value={currentSearch} />
         </form>
-        {showLogin && <a href="/login">Member Login</a>}
+        {showLogin && (memberEmail ? <a href="/student-portal" aria-label="Open your student profile">My profile</a> : <a href="/login">Member Login</a>)}
         {showCta && <a className="dark-button compact" href={ctaHref}>{ctaLabel}</a>}
       </div>
     </header>

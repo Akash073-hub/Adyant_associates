@@ -89,6 +89,7 @@ The Flask service is in [`backend/`](./backend/) and currently exposes:
 - `POST /api/auth/login` and `POST /api/auth/reset`
 - `POST /api/support`
 - `POST /api/bookings`
+- `POST /api/bookings/validate-promo`
 
 Successful sign-in form submissions are recorded in the GitHub JSON store with the username, email, and UTC timestamp. The API also updates `data/users.csv` (beside the configured `GITHUB_DATA_PATH`) with the login history, which GitHub displays as a table. The current sign-in screen is a prototype and does not verify a password or account.
 
@@ -110,7 +111,7 @@ Run backend tests with:
 python -m unittest discover -s backend -p 'test_*.py'
 ```
 
-The current booking endpoint records a pending booking only. A real payment provider, payment verification, email delivery, rate limiting, and production-grade session/token expiry still need to be added before accepting real payments or sensitive credentials.
+The booking checkout saves the student's contact details, preferred interview time, selected payment method, and any valid booking code (`MOCK10` or `FIRSTMOCK15`) as a pending booking, and emails the team when SMTP is configured. Promo codes record a discount percentage against the quoted fee; the checkout does not calculate or collect payment because no fee schedule or payment provider is configured. Payment verification, rate limiting, and production-grade session/token expiry still need to be added before accepting real payments or sensitive credentials.
 
 ## Current Stopping Point
 

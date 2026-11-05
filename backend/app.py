@@ -107,6 +107,11 @@ COHORTS = [
     },
 ]
 
+BOOKING_PROMO_CODES = {
+    "MOCK10": 10,
+    "FIRSTMOCK15": 15,
+}
+
 
 class ConfigurationError(RuntimeError):
     """Raised when the GitHub persistence configuration is incomplete."""
@@ -244,9 +249,9 @@ class GitHubStore:
         # Publish the remaining submitted records as their own GitHub tables.
         table_exports = {
             "support_requests": ["id", "created_date", "created_time", "email", "question"],
-            "mock_interview_requests": ["id", "created_date", "created_time", "name", "email", "preferred_time", "message"],
+            "mock_interview_requests": ["id", "created_date", "created_time", "name", "email", "message"],
             "reset_requests": ["id", "created_date", "created_time", "email"],
-            "bookings": ["id", "created_date", "created_time", "email", "payment_method", "status"],
+            "bookings": ["id", "created_date", "created_time", "name", "email", "preferred_time", "payment_method", "promo_code", "discount_percent", "status"],
             "videos": ["id", "created_date", "created_time", "title", "url", "description"],
         }
         for collection, columns in table_exports.items():
@@ -526,18 +531,16 @@ def create_app(
 
     @app.post("/api/mock-interview-requests")
     def mock_interview_request() -> Any:
-        payload = require_json({"name", "email", "preferred_time"})
+        payload = require_json({"name", "email"})
         email = payload["email"].strip()
         record = save_record("mock_interview_requests", {
             "name": payload["name"].strip(),
             "email": email,
-            "preferred_time": payload["preferred_time"].strip(),
             "message": str(payload.get("message", "Please send me a Google Meet link for the mock interview.")).strip(),
         })
         body = (
             "A new mock interview request was submitted.\n\n"
             f"Name: {record['name']}\nEmail: {email}\n"
-            f"Preferred date/time: {record['preferred_time']}\n\n"
             f"Message: {record['message']}\n\nPlease reply with available times and the Google Meet link."
         )
         try:
@@ -562,13 +565,58 @@ def create_app(
             return email_failure(error)
         return jsonify({"request": record, "email_sent": True}), 201
 
+    @app.post("/api/bookings/validate-promo")
+    def validate_booking_promo() -> Any:
+        payload = require_json({"code"})
+        code = payload["code"].strip().upper()
+        discount_percent = BOOKING_PROMO_CODES.get(code)
+        if discount_percent is None:
+            return jsonify({"valid": False, "error": "That booking code is not valid."}), 400
+        return jsonify({"valid": True, "code": code, "discount_percent": discount_percent})
+
     @app.post("/api/bookings")
     def booking() -> Any:
         payload = require_json({"email", "payment_method"})
         if payload["payment_method"] not in {"upi", "card", "bank", "po"}:
             return jsonify({"error": "payment_method must be one of upi, card, bank, or po"}), 400
-        record = save_record("bookings", payload | {"status": "pending_payment"})
-        return jsonify({"booking": record}), 201
+        email = payload["email"].strip().lower()
+        name = str(payload.get("name", "")).strip()
+        preferred_time = str(payload.get("preferred_time", "")).strip()
+        promo_code = str(payload.get("promo_code", "")).strip().upper()
+        if len(name) > 120:
+            return jsonify({"error": "Name must be 120 characters or fewer."}), 400
+        discount_percent = BOOKING_PROMO_CODES.get(promo_code, 0) if promo_code else 0
+        if promo_code and not discount_percent:
+            return jsonify({"error": "That booking code is not valid."}), 400
+        record = save_record("bookings", {
+            "name": name,
+            "email": email,
+            "preferred_time": preferred_time,
+            "payment_method": payload["payment_method"],
+            "promo_code": promo_code,
+            "discount_percent": discount_percent,
+            "status": "pending_payment",
+        })
+        body = (
+            "A mock interview booking was created and is awaiting payment.\n\n"
+            f"Booking ID: {record['id']}\nName: {name or 'Not provided'}\nEmail: {email}\n"
+            f"Preferred date/time: {preferred_time or 'Not provided'}\n"
+            f"Payment method: {record['payment_method']}\n"
+            f"Booking code: {promo_code or 'None'} ({discount_percent}% discount)\n"
+            "Status: Pending payment"
+        )
+        email_sent = True
+        notification_error = ""
+        try:
+            send_support_email("Mock interview booking created", body, email)
+        except (ConfigurationError, RuntimeError, ValueError) as error:
+            email_sent = False
+            notification_error = str(error)
+        response = {"booking": record, "email_sent": email_sent}
+        if notification_error:
+            response["notification_message"] = "Booking saved, but the team email could not be sent."
+            response["notification_error"] = notification_error
+        return jsonify(response), 201
 
     def save_record(collection: str, payload: dict[str, Any]) -> dict[str, Any]:
         with persistence_lock:

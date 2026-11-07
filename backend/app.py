@@ -14,6 +14,7 @@ import hmac
 import io
 import json
 import os
+import re
 import secrets
 import smtplib
 import ssl
@@ -76,6 +77,101 @@ def password_matches(password: str, salt: str, expected_hash: str) -> bool:
     return hmac.compare_digest(actual_hash, expected_hash)
 
 
+def validate_managed_link(value: str, label: str) -> None:
+    if not value:
+        return
+    parsed = urlparse(value)
+    if value.startswith("/") and not value.startswith("//") or value.startswith("#"):
+        return
+    if parsed.scheme in {"http", "https"} and parsed.netloc:
+        return
+    raise ValueError(f"{label} must be a site path, anchor, or http(s) URL.")
+
+
+def normalize_program(payload: dict[str, Any]) -> dict[str, Any]:
+    title = str(payload.get("title", "")).strip()
+    program_id = str(payload.get("id", "")).strip().lower()
+    if not title or not program_id:
+        raise ValueError("Program title and ID are required.")
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", program_id):
+        raise ValueError("Program ID must use lowercase letters, numbers, and hyphens.")
+    highlights = payload.get("highlights", [])
+    if isinstance(highlights, str):
+        highlights = [item.strip() for item in highlights.split(",") if item.strip()]
+    if not isinstance(highlights, list):
+        raise ValueError("Program highlights must be a list or comma-separated text.")
+    status = str(payload.get("status", "available")).strip().lower()
+    if status not in {"available", "coming_soon", "hidden"}:
+        raise ValueError("Program status must be available, coming_soon, or hidden.")
+    for field, label in (("syllabus_url", "Syllabus link"), ("action_url", "Action link"), ("program_url", "Program link")):
+        validate_managed_link(str(payload.get(field, "")).strip(), label)
+    return {
+        "id": program_id,
+        "title": title[:120],
+        "type": str(payload.get("type", "Program")).strip()[:80],
+        "format": str(payload.get("format", "Self-paced")).strip()[:80],
+        "description": str(payload.get("description", "")).strip()[:1000],
+        "price_label": str(payload.get("price_label", "Start")).strip()[:40],
+        "action_label": str(payload.get("action_label", "Enroll now")).strip()[:60],
+        "rating": str(payload.get("rating", "")).strip()[:20],
+        "alumni": str(payload.get("alumni", "")).strip()[:40],
+        "old_price": str(payload.get("old_price", "")).strip()[:40],
+        "highlights": [str(item).strip()[:80] for item in highlights if str(item).strip()][:12],
+        "syllabus_url": str(payload.get("syllabus_url", "")).strip()[:300],
+        "action_url": str(payload.get("action_url", "")).strip()[:300],
+        "program_url": str(payload.get("program_url", "")).strip()[:300],
+        "featured": bool(payload.get("featured", False)),
+        "status": status,
+    }
+
+
+def normalize_cohort(payload: dict[str, Any], programs: list[dict[str, Any]]) -> dict[str, Any]:
+    cohort_title = str(payload.get("title", "")).strip()
+    program_id = str(payload.get("program_id", "")).strip()
+    if not cohort_title or not program_id:
+        raise ValueError("Cohort title and program are required.")
+    if not any(program.get("id") == program_id for program in programs):
+        raise ValueError("Choose an existing program for this cohort.")
+    start_date = str(payload.get("start_date", "")).strip()
+    try:
+        datetime.strptime(start_date, "%Y-%m-%d")
+    except ValueError as error:
+        raise ValueError("Start date must use YYYY-MM-DD format.") from error
+    try:
+        seats_total = int(payload.get("seats_total", 0))
+        seats_taken = int(payload.get("seats_taken", 0))
+    except (TypeError, ValueError) as error:
+        raise ValueError("Seat totals must be whole numbers.") from error
+    if seats_total < 0 or seats_taken < 0 or seats_taken > seats_total:
+        raise ValueError("Seat counts must be non-negative and taken seats cannot exceed capacity.")
+    if not str(payload.get("schedule", "")).strip():
+        raise ValueError("Schedule is required.")
+    status = str(payload.get("status", "open")).strip().lower()
+    if status not in {"open", "soon", "closed"}:
+        raise ValueError("Cohort status must be open, soon, or closed.")
+    validate_managed_link(str(payload.get("booking_url", "")).strip(), "Booking link")
+    cohort_id = str(payload.get("id", "")).strip().lower()
+    if not cohort_id:
+        cohort_id = re.sub(r"[^a-z0-9]+", "-", f"{program_id}-{start_date}-{cohort_title}".lower()).strip("-")
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", cohort_id):
+        raise ValueError("Cohort ID must use lowercase letters, numbers, and hyphens.")
+    return {
+        "id": cohort_id[:120],
+        "program_id": program_id,
+        "title": cohort_title[:120],
+        "start_date": start_date,
+        "schedule": str(payload.get("schedule", "")).strip()[:120],
+        "time_ist": str(payload.get("time_ist", "")).strip()[:120],
+        "time_est": str(payload.get("time_est", "")).strip()[:120],
+        "instructor": str(payload.get("instructor", "")).strip()[:200],
+        "instructor_role": str(payload.get("instructor_role", "")).strip()[:100],
+        "seats_total": seats_total,
+        "seats_taken": seats_taken,
+        "booking_url": str(payload.get("booking_url", "")).strip()[:300],
+        "status": status,
+    }
+
+
 DEFAULT_STORE: dict[str, list[dict[str, Any]]] = {
     "users": [],
     "student_leads": [],
@@ -86,6 +182,9 @@ DEFAULT_STORE: dict[str, list[dict[str, Any]]] = {
     "reset_requests": [],
     "bookings": [],
     "videos": [],
+    "programs": [],
+    "cohorts": [],
+    "catalog_meta": [],
 }
 
 PROGRAMS = [
@@ -94,18 +193,54 @@ PROGRAMS = [
         "title": "AI for QA Managers",
         "type": "Leadership",
         "format": "Self-paced",
+        "description": "Adopt AI across quality operations with practical governance, team workflows, risk controls, and outcome-based implementation guidance.",
+        "price_label": "Start",
+        "action_label": "Start this program",
+        "rating": "5.0",
+        "alumni": "New",
+        "old_price": "",
+        "highlights": ["AI strategy", "Responsible adoption", "Team playbooks"],
+        "syllabus_url": "/syllabus/ai-for-qa-managers",
+        "action_url": "/membership#curriculum",
+        "program_url": "/membership#track-ai-for-qa-managers",
+        "featured": True,
+        "status": "available",
     },
     {
         "id": "interview-preparation-guide",
         "title": "Interview Preparation Guide",
         "type": "Career Prep",
         "format": "Self-paced",
+        "description": "Prepare for QA manager and automation leadership interviews with role-specific questions, frameworks, stories, and practice plans.",
+        "price_label": "Start",
+        "action_label": "Start this program",
+        "rating": "5.0",
+        "alumni": "New",
+        "old_price": "",
+        "highlights": ["Role research", "Answer frameworks", "Practice plan"],
+        "syllabus_url": "/membership#curriculum",
+        "action_url": "/membership#curriculum",
+        "program_url": "/membership#track-interview-preparation-guide",
+        "featured": False,
+        "status": "available",
     },
     {
         "id": "ready-mock-preparation",
         "title": "Ready Mock Preparation",
         "type": "Practice",
         "format": "Live interview",
+        "description": "Take a realistic mock interview with targeted questions, answer feedback, and a clear action plan for your next opportunity.",
+        "price_label": "Book",
+        "action_label": "Book your mock",
+        "rating": "5.0",
+        "alumni": "New",
+        "old_price": "",
+        "highlights": ["Mock questions", "Expert feedback", "Next steps"],
+        "syllabus_url": "/membership#curriculum",
+        "action_url": "/checkout",
+        "program_url": "/membership#track-ready-mock-preparation",
+        "featured": False,
+        "status": "available",
     },
 ]
 
@@ -113,22 +248,46 @@ COHORTS = [
     {
         "id": "ai-for-qa-managers-oct-2026",
         "program_id": "ai-for-qa-managers",
+        "title": "Practical AI leadership workshop",
         "start_date": "2026-10-26",
         "schedule": "Sat & Sun",
+        "time_ist": "07:30 PM – 10:00 PM IST",
+        "time_est": "10:00 AM – 12:30 PM EST",
+        "instructor": "Ganapati Heregange, Gaurish Hebbar & Kiran Kodlekere",
+        "instructor_role": "QA Lecturers",
+        "seats_total": 20,
+        "seats_taken": 10,
+        "booking_url": "/membership#curriculum",
         "status": "open",
     },
     {
         "id": "interview-preparation-guide-nov-2026",
         "program_id": "interview-preparation-guide",
+        "title": "Role-focused preparation sessions",
         "start_date": "2026-11-04",
         "schedule": "Mon - Thu",
+        "time_ist": "08:00 PM – 09:30 PM IST",
+        "time_est": "10:30 AM – 12:00 PM EST",
+        "instructor": "Ganapati Heregange",
+        "instructor_role": "Interview Coach",
+        "seats_total": 20,
+        "seats_taken": 8,
+        "booking_url": "/membership#curriculum",
         "status": "open",
     },
     {
         "id": "ready-mock-preparation-nov-2026",
         "program_id": "ready-mock-preparation",
+        "title": "Live mock interview practice",
         "start_date": "2026-11-15",
         "schedule": "Sat & Sun",
+        "time_ist": "06:00 PM – 08:30 PM IST",
+        "time_est": "08:30 AM – 11:00 AM EST",
+        "instructor": "Ganapati Heregange, Gaurish Hebbar & Kiran Kodlekere",
+        "instructor_role": "QA Lecturers",
+        "seats_total": 12,
+        "seats_taken": 6,
+        "booking_url": "/checkout",
         "status": "soon",
     },
 ]
@@ -279,6 +438,8 @@ class GitHubStore:
             "reset_requests": ["id", "created_date", "created_time", "email"],
             "bookings": ["id", "created_date", "created_time", "name", "email", "preferred_time", "payment_method", "promo_code", "discount_percent", "status"],
             "videos": ["id", "created_date", "created_time", "title", "url", "description"],
+            "programs": ["id", "title", "type", "format", "description", "price_label", "action_label", "status", "highlights", "syllabus_url", "action_url", "program_url"],
+            "cohorts": ["id", "program_id", "title", "start_date", "schedule", "time_ist", "time_est", "instructor", "instructor_role", "seats_total", "seats_taken", "status", "booking_url"],
         }
         for collection, columns in table_exports.items():
             csv_path = f"{parent}/{collection}.csv" if parent else f"{collection}.csv"
@@ -394,6 +555,19 @@ def create_app(
     persistence_lock = threading.Lock()
     support_email = env.get("SUPPORT_EMAIL", "akashrbhat73@gmail.com").strip()
 
+    def catalog_records(data: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        initialized = bool(data.get("catalog_meta"))
+        programs = data["programs"] if initialized else data["programs"] or PROGRAMS
+        cohorts = data["cohorts"] if initialized else data["cohorts"] or COHORTS
+        return json.loads(json.dumps(programs)), json.loads(json.dumps(cohorts))
+
+    def initialize_catalog(data: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        programs, cohorts = catalog_records(data)
+        data["programs"] = programs
+        data["cohorts"] = cohorts
+        data["catalog_meta"] = [{"id": "catalog-v1", "initialized": True}]
+        return programs, cohorts
+
     def send_support_email(subject: str, body: str, reply_to: str | None = None) -> None:
         smtp_host = env.get("SMTP_HOST", "").strip()
         smtp_username = env.get("SMTP_USERNAME", "").strip()
@@ -470,7 +644,157 @@ def create_app(
 
     @app.get("/api/programs")
     def programs() -> Any:
-        return jsonify({"programs": PROGRAMS, "cohorts": COHORTS})
+        data, _ = persistence.read()
+        catalog_programs, cohorts = catalog_records(data)
+        public_programs = [program for program in catalog_programs if program.get("status", "available") != "hidden"]
+        program_titles = {program.get("id"): program.get("title", "") for program in public_programs}
+        public_cohorts = [
+            {
+                **cohort,
+                "program_title": program_titles.get(cohort.get("program_id"), ""),
+                "seats_available": max(0, int(cohort.get("seats_total", 0)) - int(cohort.get("seats_taken", 0))),
+                "status": "closed" if cohort.get("status") == "open" and int(cohort.get("seats_total", 0)) <= int(cohort.get("seats_taken", 0)) else cohort.get("status", "closed"),
+            }
+            for cohort in cohorts
+            if cohort.get("program_id") in program_titles
+        ]
+        return jsonify({"programs": public_programs, "cohorts": public_cohorts})
+
+    @app.route("/api/admin/programs", methods=["GET", "POST"])
+    def manage_programs() -> Any:
+        require_admin()
+        if request.method == "GET":
+            data, _ = persistence.read()
+            catalog_programs, _ = catalog_records(data)
+            return jsonify({"programs": catalog_programs})
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "Request body must be a JSON object."}), 400
+        title = str(payload.get("title", "")).strip()
+        if not title:
+            return jsonify({"error": "Program title is required."}), 400
+        record_id = str(payload.get("id", "")).strip().lower() or re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+        if not record_id or len(record_id) > 100:
+            return jsonify({"error": "Program ID must be a short slug."}), 400
+        try:
+            normalized = normalize_program({**payload, "id": record_id, "title": title})
+        except ValueError as error:
+            return jsonify({"error": str(error)}), 400
+        with persistence_lock:
+            data, sha = persistence.read()
+            catalog_programs, _ = initialize_catalog(data)
+            if any(program.get("id") == record_id for program in catalog_programs):
+                return jsonify({"error": "A program with this ID already exists."}), 409
+            catalog_programs.append(normalized)
+            data["programs"] = catalog_programs
+            persistence.write(data, sha)
+        return jsonify({"program": normalized}), 201
+
+    @app.route("/api/admin/programs/<program_id>", methods=["PUT", "DELETE"])
+    def update_program(program_id: str) -> Any:
+        require_admin()
+        with persistence_lock:
+            data, sha = persistence.read()
+            catalog_programs, cohorts = initialize_catalog(data)
+            program = next((item for item in catalog_programs if item.get("id") == program_id), None)
+            if not program:
+                return jsonify({"error": "Program not found."}), 404
+            if request.method == "DELETE":
+                data["programs"] = [item for item in catalog_programs if item.get("id") != program_id]
+                data["cohorts"] = [item for item in cohorts if item.get("program_id") != program_id]
+                persistence.write(data, sha)
+                return jsonify({"deleted": True})
+            payload = request.get_json(silent=True)
+            if not isinstance(payload, dict):
+                return jsonify({"error": "Request body must be a JSON object."}), 400
+            changes = {**program, **payload, "id": program_id}
+            try:
+                normalized = normalize_program(changes)
+            except ValueError as error:
+                return jsonify({"error": str(error)}), 400
+            data["programs"] = [normalized if item.get("id") == program_id else item for item in catalog_programs]
+            persistence.write(data, sha)
+        return jsonify({"program": normalized})
+
+    @app.route("/api/admin/cohorts", methods=["GET", "POST"])
+    def manage_cohorts() -> Any:
+        require_admin()
+        if request.method == "GET":
+            data, _ = persistence.read()
+            _, catalog_cohorts = catalog_records(data)
+            return jsonify({"cohorts": catalog_cohorts})
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "Request body must be a JSON object."}), 400
+        with persistence_lock:
+            data, sha = persistence.read()
+            catalog_programs, catalog_cohorts = initialize_catalog(data)
+            try:
+                normalized = normalize_cohort(payload, catalog_programs)
+            except ValueError as error:
+                return jsonify({"error": str(error)}), 400
+            if any(cohort.get("id") == normalized["id"] for cohort in catalog_cohorts):
+                return jsonify({"error": "A cohort with this ID already exists."}), 409
+            catalog_cohorts.append(normalized)
+            data["cohorts"] = catalog_cohorts
+            persistence.write(data, sha)
+        return jsonify({"cohort": normalized}), 201
+
+    @app.route("/api/admin/cohorts/<cohort_id>", methods=["PUT", "DELETE"])
+    def update_cohort(cohort_id: str) -> Any:
+        require_admin()
+        with persistence_lock:
+            data, sha = persistence.read()
+            catalog_programs, catalog_cohorts = initialize_catalog(data)
+            cohort = next((item for item in catalog_cohorts if item.get("id") == cohort_id), None)
+            if not cohort:
+                return jsonify({"error": "Cohort not found."}), 404
+            if request.method == "DELETE":
+                data["cohorts"] = [item for item in catalog_cohorts if item.get("id") != cohort_id]
+                persistence.write(data, sha)
+                return jsonify({"deleted": True})
+            payload = request.get_json(silent=True)
+            if not isinstance(payload, dict):
+                return jsonify({"error": "Request body must be a JSON object."}), 400
+            try:
+                normalized = normalize_cohort({**cohort, **payload, "id": cohort_id}, catalog_programs)
+            except ValueError as error:
+                return jsonify({"error": str(error)}), 400
+            data["cohorts"] = [normalized if item.get("id") == cohort_id else item for item in catalog_cohorts]
+            persistence.write(data, sha)
+        return jsonify({"cohort": normalized})
+
+    @app.route("/api/admin/bookings", methods=["GET"])
+    def admin_bookings() -> Any:
+        require_admin()
+        data, _ = persistence.read()
+        return jsonify({"bookings": data["bookings"]})
+
+    @app.route("/api/admin/bookings/<booking_id>", methods=["PUT", "DELETE"])
+    def update_booking(booking_id: str) -> Any:
+        require_admin()
+        with persistence_lock:
+            data, sha = persistence.read()
+            booking = next((item for item in data["bookings"] if item.get("id") == booking_id), None)
+            if not booking:
+                return jsonify({"error": "Booking not found."}), 404
+            if request.method == "DELETE":
+                data["bookings"] = [item for item in data["bookings"] if item.get("id") != booking_id]
+                persistence.write(data, sha)
+                return jsonify({"deleted": True})
+            payload = request.get_json(silent=True)
+            if not isinstance(payload, dict):
+                return jsonify({"error": "Request body must be a JSON object."}), 400
+            status = str(payload.get("status", booking.get("status", ""))).strip().lower()
+            allowed_statuses = {"pending_payment", "paid", "confirmed", "active", "cancelled", "completed", "rejected"}
+            if status not in allowed_statuses:
+                return jsonify({"error": "Booking status is not valid."}), 400
+            for key in ("name", "email", "preferred_time"):
+                if key in payload:
+                    booking[key] = str(payload[key]).strip()
+            booking["status"] = status
+            persistence.write(data, sha)
+        return jsonify({"booking": booking})
 
     @app.post("/api/assessments")
     def create_assessment() -> Any:
@@ -595,14 +919,14 @@ def create_app(
     @app.get("/api/videos")
     def videos() -> Any:
         data, _ = persistence.read()
-        return jsonify({"videos": data["videos"]})
+        return jsonify({"videos": [{key: value for key, value in video.items() if key != "description"} for video in data["videos"]]})
 
     @app.route("/api/admin/videos", methods=["GET", "POST"])
     def manage_videos() -> Any:
         require_admin()
         if request.method == "GET":
             data, _ = persistence.read()
-            return jsonify({"videos": data["videos"]})
+            return jsonify({"videos": [{key: value for key, value in video.items() if key != "description"} for video in data["videos"]]})
 
         payload = require_json({"title", "url"})
         url = payload["url"].strip()
@@ -612,9 +936,38 @@ def create_app(
         record = save_record("videos", {
             "title": payload["title"].strip(),
             "url": url,
-            "description": str(payload.get("description", "")).strip(),
         })
         return jsonify({"video": record}), 201
+
+    @app.route("/api/admin/videos/<video_id>", methods=["PUT", "DELETE"])
+    def update_video(video_id: str) -> Any:
+        require_admin()
+        with persistence_lock:
+            data, sha = persistence.read()
+            video = next((item for item in data["videos"] if item.get("id") == video_id), None)
+            if not video:
+                return jsonify({"error": "Video not found."}), 404
+            if request.method == "DELETE":
+                data["videos"] = [item for item in data["videos"] if item.get("id") != video_id]
+                persistence.write(data, sha)
+                return jsonify({"deleted": True})
+            payload = request.get_json(silent=True)
+            if not isinstance(payload, dict):
+                return jsonify({"error": "Request body must be a JSON object."}), 400
+            title = str(payload.get("title", video.get("title", ""))).strip()
+            url = str(payload.get("url", video.get("url", ""))).strip()
+            parsed_url = urlparse(url)
+            if not title:
+                return jsonify({"error": "Video title is required."}), 400
+            if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+                return jsonify({"error": "Video URL must start with http:// or https://."}), 400
+            video.update({
+                "title": title[:120],
+                "url": url,
+            })
+            video.pop("description", None)
+            persistence.write(data, sha)
+        return jsonify({"video": video})
 
     @app.post("/api/auth/reset")
     def reset() -> Any:

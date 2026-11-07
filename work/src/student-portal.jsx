@@ -15,6 +15,7 @@ function StudentPortal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [email] = useState(() => window.localStorage.getItem('adyant_member_email') || window.localStorage.getItem('adyant_student_email') || '');
+  const [displayName] = useState(() => window.localStorage.getItem('adyant_member_name') || '');
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [activeTab, setActiveTab] = useState('Overview');
 
@@ -29,7 +30,7 @@ function StudentPortal() {
       .finally(() => setLoading(false));
   }, []);
 
-  const initials = useMemo(() => (email.split('@')[0] || 'Student').slice(0, 2).toUpperCase(), [email]);
+  const initials = useMemo(() => (displayName || email.split('@')[0] || 'Student').slice(0, 2).toUpperCase(), [displayName, email]);
   const purchasedPrograms = [];
 
   return <div className="student-shell">
@@ -43,9 +44,9 @@ function StudentPortal() {
     </aside>
 
     <main className="student-main">
-      <header className="student-topbar"><div className="student-breadcrumb">Student Portal <span>/</span> <b>{activeTab}</b></div><div className="student-top-actions"><a className="student-avatar" href="/student-portal" title={email || 'Student profile'} aria-label="Open your profile">{initials}</a></div></header>
+      <header className="student-topbar"><div className="student-breadcrumb">Student Portal <span>/</span> <b>{activeTab}</b></div><div className="student-top-actions"><a className="student-avatar" href="/student-profile" title={email || 'Student profile'} aria-label="Open your profile">{initials}</a></div></header>
       <div className="student-content">
-        <section className="student-welcome" id="student-0"><div><span className="student-kicker">YOUR LEARNING SPACE</span><h1>Welcome{email ? `, ${email.split('@')[0]}` : ''} <span>✦</span></h1><p>Your programs, learning materials, and next steps—all in one place.</p></div><div className="student-date"><span>YOUR PORTAL</span><strong>Student access</strong><small>{email || 'Browse mode'}</small></div></section>
+        <section className="student-welcome" id="student-0"><div><span className="student-kicker">YOUR LEARNING SPACE</span><h1>Welcome{displayName ? `, ${displayName}` : email ? `, ${email.split('@')[0]}` : ''} <span>✦</span></h1><p>Your programs, learning materials, and next steps—all in one place.</p></div><div className="student-date"><span>YOUR PORTAL</span><strong>Student access</strong><small>{email || 'Browse mode'}</small></div></section>
 
         {error && <div className="student-notice" role="alert"><strong>Some portal information could not load.</strong> {error} <button type="button" onClick={() => window.location.reload()}>Try again</button></div>}
 

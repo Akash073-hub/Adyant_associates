@@ -12,12 +12,14 @@ import AdminLogin from './admin-login';
 import AdminVideos from './admin-videos';
 import MockInterview from './mock-interview';
 import StudentPortal from './student-portal';
+import StudentProfile from './student-profile';
 
 function App() {
   const isHomePage = window.location.pathname === '/home';
   const isStudentAccessPage = window.location.pathname === '/student-login';
   const isBrowseStudentPage = window.location.pathname === '/browse';
   const isStudentPortalPage = window.location.pathname === '/student-portal';
+  const isStudentProfilePage = window.location.pathname === '/student-profile';
   const isAdminLoginPage = window.location.pathname === '/admin-login';
   const isAdminPage = window.location.pathname === '/admin';
   const isLoginPage = window.location.pathname === '/login';
@@ -30,6 +32,7 @@ function App() {
   if (isStudentAccessPage) return <AccessPortal view="student" />;
   if (isBrowseStudentPage) return <AccessPortal view="browse" />;
   if (isStudentPortalPage) return <StudentPortal />;
+  if (isStudentProfilePage) return <StudentProfile />;
   if (isAdminLoginPage) return <AdminLogin />;
   if (isAdminPage) return <AdminVideos />;
   if (isLoginPage) return <SignIn />;

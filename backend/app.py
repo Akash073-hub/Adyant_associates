@@ -464,8 +464,24 @@ def create_app(
                 "message": "Developer access confirmed.",
             }), 200
         data, _ = persistence.read()
+        now = datetime.now(UTC)
+
+        def membership_is_active(user: dict[str, Any]) -> bool:
+            if user.get("email", "").strip().lower() != email or user.get("is_member") is not True:
+                return False
+            expires_at = user.get("membership_expires_at")
+            if not expires_at:
+                return True
+            try:
+                expiry = datetime.fromisoformat(str(expires_at).replace("Z", "+00:00"))
+                if expiry.tzinfo is None:
+                    expiry = expiry.replace(tzinfo=UTC)
+            except ValueError:
+                return False
+            return now < expiry
+
         is_member = any(
-            user.get("email", "").strip().lower() == email and user.get("is_member") is True
+            membership_is_active(user)
             for user in data["users"]
         ) or any(
             booking.get("email", "").strip().lower() == email

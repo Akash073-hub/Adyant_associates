@@ -77,8 +77,8 @@ function AdminVideos() {
           <input className="admin-input" id="video-title" name="title" type="text" maxLength="120" required />
           <label className="admin-label" htmlFor="video-url">Video URL</label>
           <input className="admin-input" id="video-url" name="url" type="url" placeholder="https://…" required />
-          <label className="admin-label" htmlFor="video-description">Description (optional)</label>
-          <textarea className="admin-input admin-textarea" id="video-description" name="description" rows="3" maxLength="500" />
+          <label className="admin-label" htmlFor="video-description">Class notes (optional)</label>
+          <textarea className="admin-input admin-textarea" id="video-description" name="description" rows="3" maxLength="500" placeholder="Add notes to show with this class recording" />
           <button className="authenticate-button" type="submit" disabled={saving}>{saving ? 'Saving video…' : 'Add video to library →'}</button>
           {error && <p className="field-help" role="alert">{error}</p>}
           {notice && <p className="field-help" role="status">{notice}</p>}

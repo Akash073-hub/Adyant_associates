@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import './student-portal.css';
 import { apiRequest } from './api';
+import { suppliedClassVideos } from './class-videos';
 
 function StudentPortal() {
   const [programs, setPrograms] = useState([]);
   const [cohorts, setCohorts] = useState([]);
-  const [videos, setVideos] = useState([]);
+  const [videos, setVideos] = useState(suppliedClassVideos);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [email] = useState(() => window.localStorage.getItem('adyant_member_email') || window.localStorage.getItem('adyant_student_email') || '');
   const [displayName] = useState(() => window.localStorage.getItem('adyant_member_name') || '');
-  const [selectedVideo, setSelectedVideo] = useState(null);
   const [activeTab, setActiveTab] = useState('Overview');
 
   useEffect(() => {
@@ -18,7 +18,7 @@ function StudentPortal() {
       .then(([catalog, library]) => {
         setPrograms(catalog.programs || []);
         setCohorts(catalog.cohorts || []);
-        setVideos(library.videos || []);
+        setVideos([...suppliedClassVideos, ...(library.videos || [])]);
       })
       .catch((requestError) => setError(requestError.message))
       .finally(() => setLoading(false));
@@ -55,13 +55,13 @@ function StudentPortal() {
           {purchasedPrograms.length ? <div className="student-program-grid">{purchasedPrograms.map((program) => <ProgramCard key={program.id} program={program} cohort={cohorts.find((item) => item.program_id === program.id)} />)}</div> : <div className="student-empty"><div className="student-empty-symbol">▤</div><div><h3>Your learning journey starts here</h3><p>There are no active enrollments linked to this browse session. Explore our programs to find the right next step.</p><a href="/membership">Explore programs <span>→</span></a></div></div>}
         </section>
 
-        <section className="student-section student-catalog-section"><div className="student-section-heading"><div><span className="student-kicker">FIND YOUR NEXT STEP</span><h2>Programs to explore</h2></div><a href="/membership">View program details <span>→</span></a></div>
+        <section className="student-section student-catalog-section"><div className="student-section-heading"><div><span className="student-kicker">FIND YOUR NEXT STEP</span><h2>Programs to explore</h2></div><a href="/membership">Explore programs <span>→</span></a></div>
           {loading ? <p className="student-loading">Loading programs…</p> : <div className="student-program-grid">{programs.map((program) => <ProgramCard key={program.id} program={program} cohort={cohorts.find((item) => item.program_id === program.id)} />)}</div>}
         </section>
 
-        <section className="student-section" id="student-2"><div className="student-section-heading"><div><span className="student-kicker">WATCH &amp; LEARN</span><h2>Learning library</h2><p>Watch previous classes and review their notes.</p></div></div>
-          {loading ? <p className="student-loading">Loading learning materials…</p> : <div className="student-library-grid"><article className="student-feature-video">{selectedVideo ? <VideoFrame video={selectedVideo} /> : <div className="student-feature-art"><div className="student-art-orbit orbit-one"/><div className="student-art-orbit orbit-two"/><span>AA</span><button onClick={() => setSelectedVideo(videos[0] || null)} type="button" aria-label="Open video library">▶</button></div>}<div className="student-feature-copy"><span>PREVIOUS CLASSES</span><h3>{selectedVideo?.title || 'Class recordings and notes'}</h3><p>{selectedVideo?.description || 'Choose a class to watch its recording and review the notes.'}</p><a href="#student-previous-classes">View classroom preview →</a></div></article>
-            <div className="student-material-list" id="student-previous-classes"><div className="student-material-head"><strong>Previous classes</strong><span>{videos.length} videos</span></div>{videos.length ? videos.map((video) => <button className={selectedVideo?.id === video.id ? 'selected' : ''} key={video.id} onClick={() => setSelectedVideo(video)} type="button"><span className="material-play">▶</span><span><strong>{video.title}</strong><small>{video.description ? `Notes: ${video.description}` : 'Class recording'}</small></span><b>▶</b></button>) : <div className="student-material-empty"><span>▧</span><strong>No previous classes yet</strong><p>Class recordings and notes will appear here when they are added.</p></div>}</div>
+        <section className="student-section" id="student-2"><div className="student-section-heading"><div><span className="student-kicker">WATCH &amp; LEARN</span><h2>Learning library</h2></div></div>
+          {loading ? <p className="student-loading">Loading learning materials…</p> : <div className="student-library-grid"><article className="student-feature-video"><div className="student-feature-art"><div className="student-art-orbit orbit-one"/><div className="student-art-orbit orbit-two"/><span>AA</span></div><div className="student-feature-copy"><span>PREVIOUS CLASSES</span><h3>Class recordings</h3><a href="/student-classroom">View classroom preview →</a></div></article>
+            <div className="student-material-list"><div className="student-material-head"><strong>Previous classes</strong><span>1 class</span></div>{videos.slice(0, 1).map((video) => <div className="student-material-row" key={video.id}><span className="material-play">▶</span><span><strong>{video.title}</strong><small>{video.date}</small></span></div>)}</div>
           </div>}
         </section>
 
@@ -76,11 +76,7 @@ function StudentPortal() {
 }
 
 function ProgramCard({ program, cohort }) {
-  return <article className="student-program-card"><div className="student-program-art"><span>AA</span><small>{program.type || 'LEARNING PROGRAM'}</small></div><div className="student-program-body"><div className="student-program-status"><span className="catalog-available">{program.status === 'coming_soon' ? 'COMING SOON' : 'AVAILABLE'}</span><small>{program.format}</small></div><h3>{program.title}</h3><p>{program.description || 'Explore the details and learning outcomes for this program.'}</p><div className="student-program-meta"><span>{cohort ? `Next start ${cohort.start_date}` : 'Flexible access'}</span><span>Explore before enrolling</span></div><a href={program.program_url || '/membership#curriculum'}>View program details <b>→</b></a></div></article>;
-}
-
-function VideoFrame({ video }) {
-  return <div className="student-video-frame">{video.url.match(/\.(mp4|webm|ogg)(\?.*)?$/i) ? <video controls src={video.url} /> : <iframe src={video.url} title={video.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />}</div>;
+  return <article className="student-program-card"><div className="student-program-art"><span>AA</span><small>{program.type || 'LEARNING PROGRAM'}</small></div><div className="student-program-body"><div className="student-program-status"><span className="catalog-available">{program.status === 'coming_soon' ? 'COMING SOON' : 'AVAILABLE'}</span><small>{program.format}</small></div><h3>{program.title}</h3><p>{program.description || 'Explore the details and learning outcomes for this program.'}</p><div className="student-program-meta"><span>{cohort ? `Next start ${cohort.start_date}` : 'Flexible access'}</span><span>Explore before enrolling</span></div></div></article>;
 }
 
 export default StudentPortal;

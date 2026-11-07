@@ -3,6 +3,7 @@ import './membership.css';
 import SiteNav from './site-nav';
 import { focusSearchTarget, getSearchQuery } from './search-navigation';
 import { apiRequest } from './api';
+import { suppliedClassVideos } from './class-videos';
 
 const faqs = [
   ['Which program should I start with?', 'Browse the current catalog above and choose the format and subject that best fit your goals.'],
@@ -28,8 +29,8 @@ function Membership() {
   }, [search]);
   useEffect(() => {
     apiRequest('/videos')
-      .then((result) => setVideos(result.videos))
-      .catch(() => setVideos([]));
+      .then((result) => setVideos([...suppliedClassVideos, ...(result.videos || [])]))
+      .catch(() => setVideos(suppliedClassVideos));
   }, []);
   useEffect(() => {
     apiRequest('/programs')
@@ -75,7 +76,7 @@ function VideoPreview({ video, playing, onToggle }) {
     <div className={`video-screen ${video ? 'has-selected-video' : ''}`}>
       {video ? (embedUrl
         ? <iframe className="membership-video-embed" src={embedUrl} title={video.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
-        : <video className="membership-video-file" controls src={video.url}>{video.description || video.title}</video>)
+        : <video className="membership-video-file" controls src={video.url}>{video.title}</video>)
         : <><div className="code-preview"><span>{'// Interview preparation session'}</span><p><b>Question</b>: Tell us about your QA leadership approach.</p><p><b>Framework</b>: Context → Action → Result → Learning</p><p><b>Feedback</b>: Clear, specific, and actionable.</p><p><b>Next step</b>: Rehearse your strongest example.</p></div><div className="terminal-output">[MOCK-SESSION] Interview prompts loaded.<br />[FEEDBACK] Response structure reviewed | Next steps ready.</div><div className="faculty-cam"><span>● COACH CAM</span><strong>QA</strong><b>Interview Coach</b><small>Practical feedback</small></div><button className={`play-button ${playing ? 'is-playing' : ''}`} onClick={onToggle} type="button">{playing ? 'Ⅱ' : '▶'}</button></>}
     </div>
     {!video && <div className="video-controls"><div className="progress"><span /></div><div><span>Ⅱ　↶ 10　↷ 10　 08:24 / 24:10</span><span>1.25x　♬　▣　⚙　⛶</span></div></div>}
@@ -106,7 +107,7 @@ function ChapterList({ videos, activeVideo, onSelectVideo }) {
     <div className="chapter-heading"><span>TRIAL VIDEO LIBRARY</span><h3>Choose a video <b>{videos.length + 1} videos</b></h3></div>
     <div className="membership-video-list">
       <button className={!activeVideo ? 'selected' : ''} onClick={() => onSelectVideo(null)} type="button"><strong>Trial Video</strong><span>Sample interview preparation preview</span></button>
-      {videos.map((video) => <button className={activeVideo?.id === video.id ? 'selected' : ''} key={video.id} onClick={() => onSelectVideo(video)} type="button"><strong>{video.title}</strong><span>{video.description || 'Open membership video'}</span></button>)}
+      {videos.map((video) => <button className={activeVideo?.id === video.id ? 'selected' : ''} key={video.id} onClick={() => onSelectVideo(video)} type="button"><strong>{video.title}</strong><span>{video.date || 'Class recording'}</span></button>)}
     </div>
     <div className="chapter-heading chapter-subheading"><span>PREPARATION BREAKDOWN</span><h3>Key Concepts &amp; Timestamps <b>4 Chapters</b></h3></div>
     {chapters.map(([time, title, text], index) => <article className={index === 1 && !activeVideo ? 'current' : ''} key={time}><span>{time}</span><h4>{title}</h4><p>{text}</p></article>)}

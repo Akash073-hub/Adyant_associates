@@ -50,6 +50,32 @@ def split_datetime(value: Any) -> tuple[str, str]:
         return value, ""
 
 
+def is_active_member_record(user: dict[str, Any], email: str) -> bool:
+    if user.get("email", "").strip().lower() != email or user.get("is_member") is not True:
+        return False
+    expires_at = user.get("membership_expires_at")
+    if not expires_at:
+        return True
+    try:
+        expiry = datetime.fromisoformat(str(expires_at).replace("Z", "+00:00"))
+        if expiry.tzinfo is None:
+            expiry = expiry.replace(tzinfo=UTC)
+    except ValueError:
+        return False
+    return datetime.now(UTC) < expiry
+
+
+def hash_password(password: str, salt: str) -> str:
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 310_000).hex()
+
+
+def password_matches(password: str, salt: str, expected_hash: str) -> bool:
+    if not password or not salt or not expected_hash:
+        return False
+    actual_hash = hash_password(password, salt)
+    return hmac.compare_digest(actual_hash, expected_hash)
+
+
 DEFAULT_STORE: dict[str, list[dict[str, Any]]] = {
     "users": [],
     "student_leads": [],
@@ -455,42 +481,84 @@ def create_app(
     @app.post("/api/auth/login")
     def login() -> Any:
         payload = require_json({"email"})
+        if not isinstance(payload["email"], str):
+            return jsonify({"error": "Enter a valid email address."}), 400
         email = payload["email"].strip().lower()
         developer_email = env.get("DEVELOPER_ACCESS_EMAIL", "").strip().lower()
-        if developer_email and email == developer_email:
-            return jsonify({
-                "member": True,
-                "developer_access": True,
-                "message": "Developer access confirmed.",
-            }), 200
         data, _ = persistence.read()
-        now = datetime.now(UTC)
-
-        def membership_is_active(user: dict[str, Any]) -> bool:
-            if user.get("email", "").strip().lower() != email or user.get("is_member") is not True:
-                return False
-            expires_at = user.get("membership_expires_at")
-            if not expires_at:
-                return True
-            try:
-                expiry = datetime.fromisoformat(str(expires_at).replace("Z", "+00:00"))
-                if expiry.tzinfo is None:
-                    expiry = expiry.replace(tzinfo=UTC)
-            except ValueError:
-                return False
-            return now < expiry
-
-        is_member = any(
-            membership_is_active(user)
-            for user in data["users"]
-        ) or any(
+        member_record = next((user for user in data["users"] if is_active_member_record(user, email)), None)
+        is_member = member_record is not None or any(
             booking.get("email", "").strip().lower() == email
             and booking.get("status", "").lower() in {"paid", "confirmed", "active"}
             for booking in data["bookings"]
         )
         if not is_member:
+            if developer_email and email == developer_email:
+                return jsonify({
+                    "member": True,
+                    "developer_access": True,
+                    "token": issue_token(email),
+                    "name": "",
+                    "message": "Developer access confirmed.",
+                }), 200
             return jsonify({"member": False, "message": "We couldn't find an active membership for this email. Browse as a student or contact support if you believe this is a mistake."}), 403
-        return jsonify({"member": True, "message": "An active membership was found for this email."}), 200
+        if member_record and member_record.get("password_hash"):
+            password = payload.get("password", "")
+            if not isinstance(password, str) or not password_matches(
+                password, member_record.get("password_salt", ""), member_record["password_hash"]
+            ):
+                return jsonify({"error": "The email or password is incorrect."}), 401
+        return jsonify({
+            "member": True,
+            "token": issue_token(email),
+            "name": member_record.get("name", "") if member_record else "",
+            "message": "An active membership was found for this email.",
+        }), 200
+
+    @app.route("/api/auth/profile", methods=["GET", "POST"])
+    def student_profile() -> Any:
+        email = require_student()
+        if request.method == "GET":
+            data, _ = persistence.read()
+            member = next(
+                (user for user in data["users"] if is_active_member_record(user, email)),
+                None,
+            )
+            if not member:
+                return jsonify({"error": "An active member profile was not found."}), 404
+            return jsonify({"email": email, "name": member.get("name", ""), "has_password": bool(member.get("password_hash"))})
+
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "Request body must be a JSON object."}), 400
+        name = str(payload.get("name", "")).strip()
+        new_password = payload.get("new_password", "")
+        current_password = payload.get("current_password", "")
+        if len(name) > 120:
+            return jsonify({"error": "Name must be 120 characters or fewer."}), 400
+        if new_password and (not isinstance(new_password, str) or len(new_password) < 8):
+            return jsonify({"error": "New password must be at least 8 characters."}), 400
+        with persistence_lock:
+            data, sha = persistence.read()
+            member = next(
+                (user for user in data["users"] if is_active_member_record(user, email)),
+                None,
+            )
+            if not member:
+                return jsonify({"error": "An active member profile was not found."}), 404
+            if new_password:
+                if member.get("password_hash") and not password_matches(
+                    current_password if isinstance(current_password, str) else "",
+                    member.get("password_salt", ""),
+                    member["password_hash"],
+                ):
+                    return jsonify({"error": "Current password is incorrect."}), 401
+                salt = secrets.token_hex(16)
+                member["password_salt"] = salt
+                member["password_hash"] = hash_password(new_password, salt)
+            member["name"] = name
+            persistence.write(data, sha)
+        return jsonify({"email": email, "name": name, "has_password": bool(member.get("password_hash")), "message": "Profile updated."})
 
     @app.post("/api/student-leads")
     def student_lead() -> Any:
@@ -703,6 +771,30 @@ def create_app(
         if not valid:
             return_error = {"error": "Admin session is missing or expired. Please sign in again."}
             raise PermissionError(return_error["error"])
+
+    def require_student() -> str:
+        authorization = request.headers.get("Authorization", "")
+        token = authorization.removeprefix("Bearer ").strip()
+        try:
+            decoded = base64.urlsafe_b64decode(token.encode()).decode()
+            email, timestamp, supplied_signature = decoded.rsplit(".", 2)
+            message = f"{email}.{timestamp}".encode()
+            expected_signature = hmac.new(
+                app.config["SECRET_KEY"].encode(), message, hashlib.sha256
+            ).hexdigest()
+            token_age = datetime.now(UTC).timestamp() - int(timestamp)
+            valid = (
+                "@" in email
+                and token_age >= 0
+                and token_age <= 12 * 60 * 60
+                and hmac.compare_digest(supplied_signature, expected_signature)
+            )
+        except (ValueError, UnicodeDecodeError, binascii.Error):
+            valid = False
+            email = ""
+        if not valid:
+            raise PermissionError("Member session is missing or expired. Please sign in again.")
+        return email
 
     return app
 

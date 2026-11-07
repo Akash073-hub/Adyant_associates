@@ -35,7 +35,7 @@ function MockInterview() {
     } catch (requestError) {
       if (requestError.saved) {
         setSubmitted(true);
-        setEmailWarning('Your request was saved, but the team email could not be sent. The site owner needs to configure SMTP in backend/.env.');
+        setEmailWarning(requestError.message);
         formElement.reset();
       } else {
         setError(requestError.message);
@@ -64,13 +64,13 @@ function MockInterview() {
             <label htmlFor="request-email">Your email</label>
             <input id="request-email" name="email" type="email" maxLength="254" required />
             <button className="mock-request" type="submit" disabled={submitting}>
-              {submitting ? 'Sending request…' : submitted ? 'Request sent ✓' : 'Request a Google Meet link →'}
+              {submitting ? 'Sending request…' : emailSent ? 'Request sent ✓' : submitted ? 'Request saved' : 'Request a Google Meet link →'}
             </button>
             {submitted && <p className="mock-status" role="status">{emailSent ? `Your request was emailed to ${CONTACT_EMAIL}. We’ll reply with available times and the Google Meet link.` : 'Your request was saved.'}</p>}
             {emailWarning && <p className="mock-error" role="alert">{emailWarning}</p>}
             {error && <p className="mock-error" role="alert">{error}</p>}
           </form>
-          <p className="mock-note">We’ll email you available times and the Google Meet link.</p>
+          <p className="mock-note">We’ll reply using the email address you provide.</p>
           <a className="mock-back" href="/membership">Explore membership programs</a>
         </section>
       </main>

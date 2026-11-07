@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './access-portal.css';
 import './signin.css';
 import { apiRequest } from './api';
@@ -11,7 +11,7 @@ function AdminVideos() {
   const [notice, setNotice] = useState('');
   const token = sessionStorage.getItem('adminToken');
 
-  async function loadVideos() {
+  const loadVideos = useCallback(async () => {
     if (!token) {
       window.location.replace('/admin-login');
       return;
@@ -29,9 +29,9 @@ function AdminVideos() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [token]);
 
-  useEffect(() => { loadVideos(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadVideos(); }, [loadVideos]);
 
   async function handleSubmit(event) {
     event.preventDefault();

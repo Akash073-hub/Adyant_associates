@@ -377,9 +377,18 @@ def create_app(
             smtp_port = int(env.get("SMTP_PORT", "587"))
         except ValueError as error:
             raise ConfigurationError("SMTP_PORT must be a valid port number.") from error
-        if not all((smtp_host, smtp_username, smtp_password, from_email, support_email)):
+        missing_settings = [
+            key for key, value in {
+                "SMTP_HOST": smtp_host,
+                "SMTP_USERNAME": smtp_username,
+                "SMTP_PASSWORD": smtp_password,
+                "SMTP_FROM_EMAIL": from_email,
+                "SUPPORT_EMAIL": support_email,
+            }.items() if not value
+        ]
+        if missing_settings:
             raise ConfigurationError(
-                "Set SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, and SMTP_FROM_EMAIL in backend/.env."
+                f"Set {', '.join(missing_settings)} in backend/.env to send email."
             )
         if reply_to and any(char in reply_to for char in "\r\n"):
             raise ValueError("Reply email address is invalid.")

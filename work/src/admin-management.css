@@ -1,0 +1,55 @@
+.admin-management-page{min-height:100vh;padding:0 22px;color:#18263c;background:#f5f7fb;font-family:Inter,Arial,sans-serif}
+.admin-management-header{max-width:1380px;height:66px;display:flex;align-items:center;justify-content:space-between;margin:0 auto;border-bottom:1px solid #e3e8f1}
+.admin-management-brand{display:flex;align-items:center;gap:9px;color:#17243a;text-decoration:none;font-size:13px;font-weight:700}
+.admin-management-brand>span{display:grid;place-items:center;width:30px;height:30px;color:#fff;background:#315fce;border-radius:7px;font-size:16px}
+.admin-management-brand small{padding:4px 6px;color:#65728a;background:#e9eef9;border-radius:4px;font:700 8px 'JetBrains Mono',monospace;letter-spacing:.08em}
+.admin-management-header>button,.admin-item-actions button,.admin-bookings-list td button{padding:8px 11px;color:#42516a;background:#fff;border:1px solid #dce2ec;border-radius:5px;font:600 10px Inter,Arial,sans-serif;cursor:pointer}
+.admin-management-main{max-width:1380px;margin:0 auto;padding:30px 0 48px}
+.admin-management-title{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:21px}
+.admin-management-title span{color:#5474b5;font:700 9px 'JetBrains Mono',monospace;letter-spacing:.1em}
+.admin-management-title h1{margin:6px 0;color:#13223a;font-size:26px;letter-spacing:-.04em}
+.admin-management-title p{margin:0;color:#758198;font-size:11px}
+.admin-management-tabs{display:flex;gap:5px;padding:5px;margin-bottom:17px;background:#e9edf5;border-radius:8px}
+.admin-management-tabs button{padding:10px 15px;color:#64718a;background:transparent;border:0;border-radius:6px;font:600 10px Inter,Arial,sans-serif;cursor:pointer}
+.admin-management-tabs button.active{color:#234b9c;background:#fff;box-shadow:0 1px 3px #18263c12}
+.admin-management-message{padding:11px 14px;margin:0 0 14px;border-radius:6px;font-size:11px}
+.admin-management-message.error{color:#982e35;background:#fff0ef;border:1px solid #f5d0ce}
+.admin-management-message.success{color:#176b4c;background:#eaf8f1;border:1px solid #ccebd9}
+.admin-management-loading,.admin-management-empty{padding:20px;color:#7b879b;font-size:11px}
+.admin-management-grid{display:grid;grid-template-columns:minmax(330px,.85fr) minmax(0,1.35fr);gap:15px;align-items:start}
+.admin-management-form,.admin-management-list,.admin-bookings-list{padding:20px;background:#fff;border:1px solid #e4e8f0;border-radius:9px;box-shadow:0 2px 7px #263b5a08}
+.admin-management-form h2,.admin-management-list h2,.admin-bookings-list h2{display:flex;align-items:center;justify-content:space-between;margin:0 0 15px;color:#192942;font-size:14px}
+.admin-management-list h2 b,.admin-bookings-list h2 b{padding:4px 7px;color:#4967a3;background:#edf2fc;border-radius:9px;font:600 9px 'JetBrains Mono',monospace}
+.admin-field{display:flex;flex-direction:column;gap:5px;min-width:0;margin-bottom:11px;color:#48566d;font-size:9px;font-weight:600}
+.admin-field input,.admin-field textarea,.admin-field select,.admin-bookings-list td select{width:100%;min-height:35px;padding:8px 9px;color:#18263c;background:#fff;border:1px solid #dce2ec;border-radius:5px;font:11px Inter,Arial,sans-serif}
+.admin-field textarea{min-height:74px;resize:vertical}
+.admin-field input:focus,.admin-field textarea:focus,.admin-field select:focus,.admin-bookings-list td select:focus{border-color:#4f7fe3;outline:2px solid #4f7fe31c}
+.admin-field input:disabled{color:#8993a5;background:#f4f6fa}
+.admin-field small{color:#8792a6;font-size:8px;font-weight:400}
+.admin-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.admin-check{display:flex;align-items:center;gap:8px;color:#526078;font-size:10px}
+.admin-check input{accent-color:#315fce}
+.admin-management-actions{display:flex;gap:8px;margin-top:13px}
+.admin-management-actions button{min-height:35px;padding:0 13px;color:#4d5b71;background:#fff;border:1px solid #dce2ec;border-radius:5px;font:600 10px Inter,Arial,sans-serif;cursor:pointer}
+.admin-management-actions button.primary{color:#fff;background:#315fce;border-color:#315fce}
+.admin-management-actions button:disabled{opacity:.55;cursor:wait}
+.admin-item{display:flex;justify-content:space-between;gap:15px;padding:14px 0;border-top:1px solid #edf0f4}
+.admin-item>div:first-child{min-width:0}
+.admin-item strong{display:block;color:#23314a;font-size:11px}
+.admin-item a{display:inline-block;margin-top:5px;color:#315fce;text-decoration:none;font-size:9px}
+.admin-item p{margin:6px 0;color:#738097;font-size:10px;line-height:1.5}
+.admin-item small,.admin-item-meta{display:block;margin-top:5px;color:#8993a5;font-size:9px;line-height:1.5}
+.admin-item-actions{display:flex;align-items:flex-start;gap:5px;flex:0 0 auto}
+.admin-item-actions button.danger,.admin-bookings-list td button.danger{color:#a1454a;border-color:#f0d4d4}
+.admin-bookings-scroll{overflow:auto}
+.admin-bookings-list table{width:100%;border-collapse:collapse;text-align:left}
+.admin-bookings-list th{padding:10px;color:#8792a6;border-bottom:1px solid #e8ecf3;font:700 8px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+.admin-bookings-list td{padding:12px 10px;border-bottom:1px solid #edf0f4;color:#4c5a71;font-size:10px;vertical-align:middle}
+.admin-bookings-list td strong,.admin-bookings-list td small{display:block}
+.admin-bookings-list td strong{color:#26354e;font-size:10px}
+.admin-bookings-list td small{margin-top:4px;color:#8993a5;font-size:8px}
+.admin-bookings-list td select,.admin-bookings-list td input{min-width:130px;min-height:31px;padding:6px;font-size:9px}
+.admin-bookings-list td button{margin-right:5px;padding:7px 8px}
+.admin-management-footer{max-width:1380px;padding:14px 0;margin:0 auto;color:#939aaa;border-top:1px solid #e3e8f1;font-size:9px}
+@media(max-width:900px){.admin-management-grid{grid-template-columns:1fr}.admin-management-form{order:0}.admin-management-list{order:1}}
+@media(max-width:600px){.admin-management-page{padding:0 13px}.admin-management-main{padding-top:23px}.admin-management-title h1{font-size:22px}.admin-management-tabs{overflow:auto}.admin-management-tabs button{flex:0 0 auto;padding:9px 11px;font-size:9px}.admin-management-form,.admin-management-list,.admin-bookings-list{padding:15px}.admin-form-row{grid-template-columns:1fr;gap:0}.admin-item{flex-direction:column}.admin-item-actions{align-self:flex-end}.admin-bookings-list table{min-width:850px}}

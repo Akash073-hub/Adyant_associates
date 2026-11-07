@@ -2,12 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import './student-portal.css';
 import { apiRequest } from './api';
 
-const descriptions = {
-  'ai-for-qa-managers': 'A practical guide to leading AI adoption in QA, with governance, workflows, and implementation checkpoints.',
-  'interview-preparation-guide': 'A structured plan for preparing confident QA manager and automation interview answers.',
-  'ready-mock-preparation': 'Practice with a live mock interview, direct feedback, and a prioritized improvement plan.',
-};
-
 function StudentPortal() {
   const [programs, setPrograms] = useState([]);
   const [cohorts, setCohorts] = useState([]);
@@ -46,7 +40,7 @@ function StudentPortal() {
     <main className="student-main">
       <header className="student-topbar"><div className="student-breadcrumb">Student Portal <span>/</span> <b>{activeTab}</b></div><div className="student-top-actions"><a className="student-avatar" href="/student-profile" title={email || 'Student profile'} aria-label="Open your profile">{initials}</a></div></header>
       <div className="student-content">
-        <section className="student-welcome" id="student-0"><div><span className="student-kicker">YOUR LEARNING SPACE</span><h1>Welcome{displayName ? `, ${displayName}` : email ? `, ${email.split('@')[0]}` : ''} <span>✦</span></h1><p>Your programs, learning materials, and next steps—all in one place.</p></div><div className="student-date"><span>YOUR PORTAL</span><strong>Student access</strong><small>{email || 'Browse mode'}</small></div></section>
+        <section className="student-welcome" id="student-0"><div><span className="student-kicker">YOUR LEARNING SPACE</span><h1>Welcome{displayName ? `, ${displayName}` : email ? `, ${email.split('@')[0]}` : ''} <span>✦</span></h1><p>Your programs, learning materials, and next steps—all in one place.</p></div></section>
 
         {error && <div className="student-notice" role="alert"><strong>Some portal information could not load.</strong> {error} <button type="button" onClick={() => window.location.reload()}>Try again</button></div>}
 
@@ -82,7 +76,7 @@ function StudentPortal() {
 }
 
 function ProgramCard({ program, cohort }) {
-  return <article className="student-program-card"><div className="student-program-art"><span>AA</span><small>{program.type || 'LEARNING PROGRAM'}</small></div><div className="student-program-body"><div className="student-program-status"><span className="catalog-available">AVAILABLE</span><small>{program.format}</small></div><h3>{program.title}</h3><p>{descriptions[program.id] || 'Explore the details and learning outcomes for this program.'}</p><div className="student-program-meta"><span>{cohort ? `Next start ${cohort.start_date}` : 'Flexible access'}</span><span>Explore before enrolling</span></div><a href="/membership">View program details <b>→</b></a></div></article>;
+  return <article className="student-program-card"><div className="student-program-art"><span>AA</span><small>{program.type || 'LEARNING PROGRAM'}</small></div><div className="student-program-body"><div className="student-program-status"><span className="catalog-available">{program.status === 'coming_soon' ? 'COMING SOON' : 'AVAILABLE'}</span><small>{program.format}</small></div><h3>{program.title}</h3><p>{program.description || 'Explore the details and learning outcomes for this program.'}</p><div className="student-program-meta"><span>{cohort ? `Next start ${cohort.start_date}` : 'Flexible access'}</span><span>Explore before enrolling</span></div><a href={program.program_url || '/membership#curriculum'}>View program details <b>→</b></a></div></article>;
 }
 
 function VideoFrame({ video }) {

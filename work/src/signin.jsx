@@ -4,26 +4,27 @@ import SiteNav from './site-nav';
 import { apiRequest } from './api';
 
 function SignIn() {
-  const [authenticated, setAuthenticated] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
-    setAuthenticated(false);
     setSubmitting(true);
     const form = new FormData(event.currentTarget);
     try {
-      await apiRequest('/auth/login', {
+      const result = await apiRequest('/auth/login', {
         method: 'POST',
         body: JSON.stringify({
           email: form.get('email'),
+          password: form.get('password'),
         }),
       });
       const email = String(form.get('email')).trim().toLowerCase();
       window.localStorage.setItem('adyant_member_email', email);
       window.localStorage.setItem('adyant_student_email', email);
+      window.localStorage.setItem('adyant_member_token', result.token);
+      if (result.name) window.localStorage.setItem('adyant_member_name', result.name);
       window.location.assign('/student-portal');
     } catch (requestError) {
       setError(requestError.message);
@@ -44,9 +45,9 @@ function SignIn() {
             <div className="signin-intro"><h1>Sign In to Your QA Career Portal</h1><p>Access your AI for QA Managers guidance, interview preparation resources, and mock interview booking details.</p></div>
             <form className="signin-form" onSubmit={handleSubmit}>
               <SignInField name="email" label="Email address used for your program" note="REQUIRED" icon="✉" placeholder="you@example.com" type="email" />
-              <p className="field-help"><span>ⓘ</span> We’ll check whether this email has an active membership.</p>
-              <button className="authenticate-button" type="submit" disabled={submitting}><span aria-hidden="true">▣</span> {submitting ? 'Checking membership…' : authenticated ? 'Membership verified' : 'Check member access →'}</button>
-              {authenticated && <p className="field-help" role="status">Membership found. Full member account access will be available once account sign-in is enabled.</p>}
+              <SignInField name="password" label="Password (if set)" note="OPTIONAL" icon="⚿" placeholder="Leave blank if you have not set one" type="password" required={false} />
+              <p className="field-help"><span>ⓘ</span> Enter the password you saved in your profile. Leave it blank if you have not set one.</p>
+              <button className="authenticate-button" type="submit" disabled={submitting}><span aria-hidden="true">▣</span> {submitting ? 'Signing in…' : 'Sign in →'}</button>
               {error && <p className="field-help" role="alert">{error}</p>}
             </form>
           </section>
@@ -58,8 +59,8 @@ function SignIn() {
   );
 }
 
-function SignInField({ name, label, note, icon, placeholder, type, valid }) {
-  return <div className="signin-field"><div className="field-label"><label htmlFor={name}>{label}</label><span>{note}</span></div><div className="input-wrap"><span className="input-icon" aria-hidden="true">{icon}</span><input id={name} name={name} placeholder={placeholder} type={type} required />{valid && <span className="valid-icon" aria-label="Valid">✓</span>}</div></div>;
+function SignInField({ name, label, note, icon, placeholder, type, valid, required = true }) {
+  return <div className="signin-field"><div className="field-label"><label htmlFor={name}>{label}</label><span>{note}</span></div><div className="input-wrap"><span className="input-icon" aria-hidden="true">{icon}</span><input id={name} name={name} placeholder={placeholder} type={type} required={required} autoComplete={name === 'password' ? 'current-password' : 'email'} />{valid && <span className="valid-icon" aria-label="Valid">✓</span>}</div></div>;
 }
 
 export default SignIn;

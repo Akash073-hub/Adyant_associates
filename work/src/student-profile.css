@@ -1,0 +1,26 @@
+.student-profile-content{max-width:1200px}
+.student-profile-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:16px;align-items:start}
+.student-profile-card{padding:22px;background:#fff;border:1px solid #e8ebf1;border-radius:9px}
+.student-profile-form{display:flex;flex-direction:column;gap:8px}
+.student-profile-form>label{margin-top:8px;color:#273247;font-size:11px;font-weight:600}
+.student-profile-form>input{width:100%;height:41px;padding:0 12px;color:#1d293e;background:#fff;border:1px solid #d9deea;border-radius:6px;font:12px Inter,sans-serif}
+.student-profile-form>input:focus{border-color:#315fce;outline:2px solid #315fce20}
+.student-profile-form>input[readonly]{color:#788296;background:#f7f8fb}
+.student-profile-form h3{margin:2px 0 0;color:#253148;font-size:13px}
+.student-profile-divider{height:1px;margin:12px 0 7px;background:#edf0f4}
+.student-profile-hint{margin:2px 0 7px;color:#818a9c;font-size:10px;line-height:1.5}
+.student-profile-save{min-height:42px;padding:0 16px;color:#fff;background:#315fce;border:0;border-radius:6px;font:600 12px Inter,sans-serif;cursor:pointer}
+.student-profile-save:disabled{opacity:.65;cursor:wait}
+.student-profile-success{padding:12px 15px;margin:0 0 17px;color:#176b4c;background:#eaf8f1;border:1px solid #ccebd9;border-radius:7px;font-size:11px}
+.student-wallet-balance{display:flex;align-items:baseline;gap:9px;padding:20px 17px;margin:18px 0;background:#f4f7ff;border:1px solid #e6ecff;border-radius:8px}
+.student-wallet-balance small{align-self:center;margin-right:auto;color:#77839b;font:600 8px 'JetBrains Mono',monospace;letter-spacing:.08em}
+.student-wallet-balance strong{color:#172748;font-size:23px;letter-spacing:-.04em}
+.student-wallet-balance span{color:#8992a3;font:600 8px 'JetBrains Mono',monospace}
+.student-wallet-empty{display:flex;flex-direction:column;align-items:center;padding:18px 15px 12px;text-align:center}
+.student-wallet-empty>span{color:#9aa4b5;font-size:19px}
+.student-wallet-empty strong{margin:8px 0 5px;color:#354158;font-size:11px}
+.student-wallet-empty p{max-width:280px;margin:0;color:#8991a1;font-size:10px;line-height:1.55}
+.student-sidebar .student-side-nav a{display:block;padding:10px 11px;color:#66738a;border-radius:6px;text-decoration:none;font-size:11px;font-weight:600}
+.student-sidebar .student-side-nav a.active{color:#315fce;background:#edf3ff}
+@media(max-width:850px){.student-profile-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.student-profile-card{padding:16px}.student-wallet-balance{padding:16px 12px}.student-wallet-balance small{font-size:7px}}

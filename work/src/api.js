@@ -13,7 +13,7 @@ export async function apiRequest(path, options = {}) {
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
     const error = new Error(body.error || `Request failed with status ${response.status}`);
-    Object.assign(error, body);
+    Object.assign(error, body, { status: response.status });
     throw error;
   }
   return body;

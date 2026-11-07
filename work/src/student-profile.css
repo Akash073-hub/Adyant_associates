@@ -7,6 +7,9 @@
 .student-profile-form>input:focus{border-color:#315fce;outline:2px solid #315fce20}
 .student-profile-form>input[readonly]{color:#788296;background:#f7f8fb}
 .student-profile-form h3{margin:2px 0 0;color:#253148;font-size:13px}
+.student-password-heading{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
+.student-password-heading h3{margin:0}
+.student-password-toggle{padding:5px 0;color:#315fce;background:none;border:0;font:600 10px Inter,sans-serif;cursor:pointer}
 .student-profile-divider{height:1px;margin:12px 0 7px;background:#edf0f4}
 .student-profile-hint{margin:2px 0 7px;color:#818a9c;font-size:10px;line-height:1.5}
 .student-profile-save{min-height:42px;padding:0 16px;color:#fff;background:#315fce;border:0;border-radius:6px;font:600 12px Inter,sans-serif;cursor:pointer}

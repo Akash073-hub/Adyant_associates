@@ -8,6 +8,7 @@ function StudentProfile() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [changePassword, setChangePassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -49,6 +50,7 @@ function StudentProfile() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setChangePassword(false);
       setNotice('Your profile has been updated.');
     } catch (requestError) {
       setError(requestError.message);
@@ -82,18 +84,11 @@ function StudentProfile() {
           <section className="student-profile-card">
             <div className="student-section-heading compact"><div><span className="student-kicker">MEMBER DETAILS</span><h2>Login profile</h2></div></div>
             {loading ? <p className="student-loading">Loading profile…</p> : <form className="student-profile-form" onSubmit={handleSubmit}>
-              <label htmlFor="profile-email">Email address</label>
-              <input id="profile-email" type="email" value={profile.email} readOnly />
               <label htmlFor="profile-name">Name</label>
               <input id="profile-name" type="text" maxLength="120" value={profile.name} onChange={(event) => setProfile((current) => ({ ...current, name: event.target.value }))} placeholder="Your name" />
               <div className="student-profile-divider" />
-              <h3>{profile.has_password ? 'Change password' : 'Set a password'}</h3>
-              {profile.has_password && <><label htmlFor="current-password">Current password</label><input id="current-password" type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} /></>}
-              <label htmlFor="new-password">{profile.has_password ? 'New password' : 'Password'}</label>
-              <input id="new-password" type="password" autoComplete="new-password" minLength="8" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="At least 8 characters" />
-              <label htmlFor="confirm-password">Confirm new password</label>
-              <input id="confirm-password" type="password" autoComplete="new-password" minLength="8" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Enter the password again" />
-              <p className="student-profile-hint">Leave password fields blank if you only want to update your name.</p>
+              <div className="student-password-heading"><h3>{profile.has_password ? 'Password' : 'Set a password'}</h3><button type="button" className="student-password-toggle" onClick={() => setChangePassword((current) => !current)}>{changePassword ? 'Cancel' : profile.has_password ? 'Change password' : 'Set password'}</button></div>
+              {changePassword && <><p className="student-profile-hint">Only enter these fields if you want to change your password.</p>{profile.has_password && <><label htmlFor="current-password">Current password</label><input id="current-password" type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} /></>}<label htmlFor="new-password">{profile.has_password ? 'New password' : 'Password'}</label><input id="new-password" type="password" autoComplete="new-password" minLength="8" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="At least 8 characters" /><label htmlFor="confirm-password">Confirm new password</label><input id="confirm-password" type="password" autoComplete="new-password" minLength="8" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Enter the password again" /></>}
               <button className="student-profile-save" type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
             </form>}
           </section>

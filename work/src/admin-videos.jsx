@@ -182,10 +182,9 @@ function AdminVideos() {
             <h2>{editingVideoId ? 'Edit video' : 'Add a video'}</h2>
             <Field label="Video title" value={videoDraft.title} onChange={(value) => setVideoDraft({ ...videoDraft, title: value })} required />
             <Field label="Video URL" type="url" value={videoDraft.url} onChange={(value) => setVideoDraft({ ...videoDraft, url: value })} required />
-            <Field label="Class notes" as="textarea" value={videoDraft.description} onChange={(value) => setVideoDraft({ ...videoDraft, description: value })} />
             <div className="admin-management-actions"><button className="primary" disabled={saving}>{saving ? 'Saving…' : editingVideoId ? 'Save video' : 'Add video'}</button>{editingVideoId && <button type="button" onClick={() => { setEditingVideoId(''); setVideoDraft(emptyVideo); }}>Cancel</button>}</div>
           </form>
-          <section className="admin-management-list"><h2>Learning library <b>{videos.length}</b></h2>{videos.length ? videos.map((video) => <article className="admin-item" key={video.id}><div><strong>{video.title}</strong><a href={video.url} target="_blank" rel="noreferrer">Open video ↗</a>{video.description && <p>{video.description}</p>}</div><div className="admin-item-actions"><button type="button" onClick={() => editVideo(video)}>Edit</button><button className="danger" type="button" onClick={() => deleteResource(`/admin/videos/${encodeURIComponent(video.id)}`, 'Video deleted.')}>Delete</button></div></article>) : <p className="admin-management-empty">No videos have been added yet.</p>}</section>
+          <section className="admin-management-list"><h2>Learning library <b>{videos.length}</b></h2>{videos.length ? videos.map((video) => <article className="admin-item" key={video.id}><div><strong>{video.title}</strong><a href={video.url} target="_blank" rel="noreferrer">Open video ↗</a></div><div className="admin-item-actions"><button type="button" onClick={() => editVideo(video)}>Edit</button><button className="danger" type="button" onClick={() => deleteResource(`/admin/videos/${encodeURIComponent(video.id)}`, 'Video deleted.')}>Delete</button></div></article>) : <p className="admin-management-empty">No videos have been added yet.</p>}</section>
         </section>}
 
         {tab === 'programs' && <section className="admin-management-grid">

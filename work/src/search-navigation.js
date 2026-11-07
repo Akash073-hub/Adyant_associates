@@ -1,10 +1,5 @@
 import { useEffect } from 'react';
-
-const COURSE_TARGETS = [
-  { slug: 'ai-for-qa-managers', title: 'AI for QA Managers', aliases: ['ai for qa', 'ai qa', 'qa managers', 'artificial intelligence'] },
-  { slug: 'interview-preparation-guide', title: 'Interview Preparation Guide', aliases: ['interview', 'interviews', 'preparation', 'qa manager interview'] },
-  { slug: 'ready-mock-preparation', title: 'Ready Mock Preparation', aliases: ['mock', 'mock interview', 'practice', 'feedback'] },
-];
+import { apiRequest } from './api';
 
 const STOP_WORDS = new Set([
   'a', 'about', 'an', 'and', 'are', 'for', 'from', 'how', 'i', 'in', 'is',
@@ -60,28 +55,35 @@ function findBestSection(query, excludedPath) {
   return best?.score > 0 ? best.section : null;
 }
 
-function matchesCourse(query, course) {
-  const normalized = query.toLowerCase();
-  return normalized.includes(course.title.toLowerCase()) || course.aliases.some((alias) => normalized.includes(alias));
-}
-
-export function navigateToSearch(query) {
+export async function navigateToSearch(query) {
   const trimmed = query.trim();
   if (!trimmed) return;
 
   const path = window.location.pathname;
-  const course = COURSE_TARGETS.find((item) => matchesCourse(trimmed, item));
+  let program = null;
+  try {
+    const catalog = await apiRequest('/programs');
+    const queryWords = meaningfulWords(trimmed);
+    const candidates = (catalog.programs || []).map((item) => {
+      const title = (item.title || '').toLowerCase();
+      const titleWords = meaningfulWords(title);
+      const sharedWords = titleWords.filter((word) => queryWords.includes(word)).length;
+      return { item, score: title && trimmed.toLowerCase().includes(title) ? 100 : sharedWords };
+    }).sort((left, right) => right.score - left.score);
+    if (candidates[0]?.score >= 2) program = candidates[0].item;
+  } catch (_) {
+    // Continue to the relevant catalog section if the API is unavailable.
+  }
   const currentSection = findSection(trimmed, path);
   const globalSection = findBestSection(trimmed, path);
   let destination = path;
   let target = '';
 
-  if (course && path === '/home') target = `course-${course.slug}`;
-  else if (course && path === '/membership') target = `track-${course.slug}`;
-  else if (course && path === '/syllabus/ai-for-qa-managers') target = 'syllabus-course';
-  else if (course) {
-    destination = course.slug === 'ai-for-qa-managers' ? '/syllabus/ai-for-qa-managers' : '/membership';
-    target = course.slug === 'ai-for-qa-managers' ? 'syllabus-course' : `track-${course.slug}`;
+  if (program && path === '/home') target = `course-${program.id}`;
+  else if (program && path === '/membership') target = `track-${program.id}`;
+  else if (program) {
+    destination = '/membership';
+    target = `track-${program.id}`;
   } else if (currentSection) {
     target = currentSection.id;
   } else if (globalSection) {

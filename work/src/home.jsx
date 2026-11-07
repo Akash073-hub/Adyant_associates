@@ -4,24 +4,6 @@ import SiteNav from './site-nav';
 import { focusSearchTarget, getSearchQuery } from './search-navigation';
 import { apiRequest } from './api';
 
-const pillars = [
-  ['01 / AI LEADERSHIP', 'AI for QA Managers', 'Lead practical AI adoption across QA teams with responsible workflows, evaluation frameworks, and measurable quality outcomes.'],
-  ['02 / INTERVIEW READY', 'Interview Preparation Guide', 'Build a focused preparation plan for QA leadership and automation interviews with clear practice milestones.'],
-  ['03 / MOCK PRACTICE', 'Ready Mock Preparation', 'Rehearse realistic interview rounds, sharpen your answers, and get structured feedback before the real conversation.'],
-];
-
-const courses = [
-  { type: 'Leadership', hours: 'Self-paced', title: 'AI for QA Managers', description: 'Adopt AI across quality operations with practical governance, team workflows, risk controls, and outcome-based implementation guidance.', rating: '5.0', alumni: 'New', price: 'Start', oldPrice: '', filter: 'AI for QA Managers' },
-  { type: 'Career Prep', hours: 'Self-paced', title: 'Interview Preparation Guide', description: 'Prepare for QA manager and automation leadership interviews with role-specific questions, frameworks, stories, and practice plans.', rating: '5.0', alumni: 'New', price: 'Start', oldPrice: '', filter: 'Interview Preparation Guide' },
-  { type: 'Practice', hours: 'Live interview', title: 'Ready Mock Preparation', description: 'Take a realistic mock interview with targeted questions, answer feedback, and a clear action plan for your next opportunity.', rating: '5.0', alumni: 'New', price: 'Book', oldPrice: '', filter: 'Ready Mock Preparation' },
-];
-
-const batches = [
-  ['AI for QA Managers', 'Practical AI leadership workshop', 'Oct 26, 2026', 'Sat & Sun', '07:30 PM – 10:00 PM IST', '10:00 AM – 12:30 PM EST', 'Ganapati Heregange, Gaurish Hebbar & Kiran Kodlekere', 'QA Lecturers', 'Open enrollment', 'open'],
-  ['Interview Preparation Guide', 'Role-focused preparation sessions', 'Nov 04, 2026', 'Mon – Thu', '08:00 PM – 09:30 PM IST', '10:30 AM – 12:00 PM EST', 'Ganapati Heregange', 'Interview Coach', 'Open enrollment', 'open'],
-  ['Ready Mock Preparation', 'Live mock interview practice', 'Nov 15, 2026', 'Sat & Sun', '06:00 PM – 08:30 PM IST', '08:30 AM – 11:00 AM EST', 'Ganapati Heregange, Gaurish Hebbar & Kiran Kodlekere', 'QA Lecturers', 'Book a mock', 'soon'],
-];
-
 /* ── Code lines with line numbers ─────────────────────────────────────────── */
 const CODE_LINES = [
   { n: '01', tokens: [{ t: 'kw', v: 'import' }, { t: '', v: ' { qaAgent, expect } ' }, { t: 'kw', v: 'from' }, { t: '', v: ' ' }, { t: 'str', v: "'@adyant/ai-testing'" }, { t: '', v: ';' }] },
@@ -107,9 +89,22 @@ function CodePanel() {
 function Home() {
   const [filter, setFilter]       = useState('All Programs');
   const [search, setSearch]       = useState('');
+  const [programs, setPrograms]   = useState([]);
+  const [cohorts, setCohorts]     = useState([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [submittingAssessment, setSubmittingAssessment] = useState(false);
   const [assessmentError, setAssessmentError] = useState('');
+
+  useEffect(() => {
+    apiRequest('/programs')
+      .then((catalog) => {
+        setPrograms(catalog.programs || []);
+        setCohorts(catalog.cohorts || []);
+      })
+      .catch(() => { setPrograms([]); setCohorts([]); })
+      .finally(() => setCatalogLoading(false));
+  }, []);
 
   async function submitAssessment(event) {
     event.preventDefault();
@@ -144,7 +139,7 @@ function Home() {
   }, [search]);
 
   const visibleCourses =
-    filter === 'All Programs' ? courses : courses.filter((c) => c.filter === filter);
+    filter === 'All Programs' ? programs : programs.filter((program) => program.title === filter);
   const searchedCourses = visibleCourses.filter((course) =>
     `${course.title} ${course.description} ${course.type}`.toLowerCase().includes(search.toLowerCase()),
   );
@@ -213,12 +208,12 @@ function Home() {
             <p>Choose the focused support you need, from AI leadership guidance to interview preparation and live mock practice.</p>
           </div>
           <div className="pillar-grid">
-            {pillars.map(([label, title, text]) => (
-              <article className="pillar" key={title}>
+            {programs.map((program, index) => (
+              <article className="pillar" key={program.id}>
                 <div className="pillar-icon">⌘</div>
-                <h3>{title}</h3>
-                <p>{text}</p>
-                <span className="pillar-label">{label}</span>
+                <h3>{program.title}</h3>
+                <p>{program.description}</p>
+                <span className="pillar-label">{String(index + 1).padStart(2, '0')} / {program.type.toUpperCase()}</span>
               </article>
             ))}
           </div>
@@ -228,12 +223,12 @@ function Home() {
         <section className="content-section courses-section" id="courses">
           <div className="section-heading course-heading">
             <div>
-              <span className="section-label">Our Three Programs</span>
+              <span className="section-label">Our Programs</span>
               <h2>Choose the right next step</h2>
               <p>Clear, focused resources without extra courses or distractions.</p>
             </div>
             <div className="filters">
-              {['All Programs', ...courses.map((course) => course.filter)].map((name) => (
+              {['All Programs', ...programs.map((program) => program.title)].map((name) => (
                 <button
                   className={filter === name ? 'selected' : ''}
                   key={name}
@@ -246,46 +241,46 @@ function Home() {
             </div>
           </div>
 
-          <div className="course-grid">
+          {catalogLoading ? <p className="search-empty">Loading programs…</p> : <div className="course-grid">
             {searchedCourses.map((course) => (
-              <article className="course-card" id={`course-${course.filter.toLowerCase().replaceAll(' ', '-')}`} key={course.title} tabIndex={-1}>
+              <article className="course-card" id={`course-${course.id}`} key={course.id} tabIndex={-1}>
                 <div className="course-main">
                   <div className="course-meta">
-                    <span className={course.type === 'Flagship' ? 'badge blue-badge' : 'badge'}>
-                      {course.type}
+                    <span className={course.status === 'available' ? 'badge blue-badge' : 'badge'}>
+                      {course.status === 'coming_soon' ? 'Coming soon' : course.type}
                     </span>
-                    <span>{course.hours}</span>
+                    <span>{course.format}</span>
                   </div>
-                  {searchedCourses.length === 0 && <p className="search-empty">No programs match “{search}”.</p>}
                   <h3>{course.title}</h3>
                   <p>{course.description}</p>
                   <div className="rating">
-                    {course.rating} <span>★</span>
-                    <small>({course.alumni} alumni)</small>
+                    {course.rating && <>{course.rating} <span>★</span></>}
+                    {course.alumni && <small>({course.alumni} alumni)</small>}
                   </div>
                 </div>
                 <div className="course-bottom">
                   <div>
-                    <strong>{course.price}</strong> <del>{course.oldPrice}</del>
+                    <strong>{course.price_label}</strong> <del>{course.old_price}</del>
                   </div>
                   <span className="discount">50% OFF</span>
                   <div className="card-actions">
-                    <a className="syllabus-button" href={course.title === 'AI for QA Managers' ? '/syllabus/ai-for-qa-managers' : '#assessment'}>Syllabus</a>
-                    <a className="dark-button" href={course.title === 'Ready Mock Preparation' ? '/membership#curriculum' : '#assessment'}>{course.title === 'Ready Mock Preparation' ? 'Book' : 'Start'}</a>
+                    <a className="syllabus-button" href={course.syllabus_url || '/membership#curriculum'}>Syllabus</a>
+                    <a className="dark-button" href={course.action_url || '/membership#curriculum'}>{course.price_label || 'Explore'}</a>
                   </div>
                 </div>
               </article>
             ))}
-          </div>
+          </div>}
+          {!catalogLoading && searchedCourses.length === 0 && <p className="search-empty">No programs match “{search}”.</p>}
         </section>
 
         {/* ── LIVE BATCHES ── */}
         <section className="content-section batches-section" id="batches">
           <div className="section-heading">
             <div>
-              <span className="section-label">Mock Interview Booking</span>
-                <h2>Book your mock interview</h2>
-                <p>Choose a preparation path, then practice with an interviewer who gives direct, useful feedback.</p>
+              <span className="section-label">Current Cohorts</span>
+                <h2>Upcoming schedules</h2>
+                <p>Review the session times, instructors, and available seats for each program.</p>
             </div>
           </div>
 
@@ -302,36 +297,36 @@ function Home() {
                 </tr>
               </thead>
               <tbody>
-                {batches.map(([title, subtitle, date, cadence, ist, est, mentor, role, capacity, status]) => (
-                  <tr key={title}>
+                {cohorts.map((cohort) => (
+                  <tr key={cohort.id}>
                     <td>
-                      <strong>{title}</strong>
-                      <small>{subtitle}</small>
+                      <strong>{cohort.program_title}</strong>
+                      <small>{cohort.title}</small>
                     </td>
                     <td>
-                      <strong>{date}</strong>
-                      <small className="text-blue">{cadence}</small>
+                      <strong>{cohort.start_date}</strong>
+                      <small className="text-blue">{cohort.schedule}</small>
                     </td>
                     <td>
-                      <strong>{ist}</strong>
-                      <small>{est}</small>
+                      <strong>{cohort.time_ist}</strong>
+                      <small>{cohort.time_est}</small>
                     </td>
                     <td>
                       <div className="mentor">
-                        <span>{mentor.split(' ').map((p) => p[0]).join('')}</span>
+                        <span>{(cohort.instructor || 'QA').split(' ').map((p) => p[0]).join('')}</span>
                         <div>
-                          <strong>{mentor}</strong>
-                          <small>{role}</small>
+                          <strong>{cohort.instructor}</strong>
+                          <small>{cohort.instructor_role}</small>
                         </div>
                       </div>
                     </td>
                     <td>
-                      <span className={`capacity ${status}`}>{capacity}</span>
+                      <span className={`capacity ${cohort.status}`}>{cohort.status === 'open' && cohort.seats_available > 0 ? `${cohort.seats_available} seats left` : cohort.status === 'soon' ? 'Coming soon' : 'Closed'}</span>
                     </td>
                     <td>
-                      <a className="dark-button" href="/membership#curriculum">
-                        {status === 'open' ? 'Book session' : 'Book Your Mock'}
-                      </a>
+                      {cohort.status === 'open' && cohort.seats_available > 0
+                        ? <a className="dark-button" href={cohort.booking_url || '/membership#curriculum'}>Book session</a>
+                        : <span className="dark-button" aria-disabled="true">Unavailable</span>}
                     </td>
                   </tr>
                 ))}
@@ -344,7 +339,7 @@ function Home() {
         <section className="social-proof content-section" id="social-proof" tabIndex={-1}>
           <div className="logo-strip">Trusted QA learning community</div>
           <div className="trust">
-          Three focused programs <span>★</span> — practical support for QA career growth
+          {programs.length} focused programs <span>★</span> — practical support for QA career growth
           </div>
           <div className="testimonial-marquee">
             <div className="testimonial-track">
@@ -390,7 +385,7 @@ function Home() {
               <Question title="1. What is your current technical role?" name="role"
                 options={['Manual QA / Functional Tester', 'Junior QA Automation', 'Developer transitioning to SDET']} />
               <Question title="2. Which testing stack do you want to master first?" name="stack"
-                options={['AI for QA Managers', 'Interview Preparation Guide', 'Ready Mock Preparation']} />
+                options={programs.map((program) => program.title)} />
               <Question title="3. What is your career goal for the next 6-12 months?" name="goal"
                 options={['Switch from Manual to SDET', 'Promoted to Lead / Architect', 'Secure Global Remote Offer']} />
 
@@ -421,7 +416,7 @@ function Home() {
               <button type="button">Join</button>
             </div>
           </div>
-          <FooterColumn title="Programs" links={['AI for QA Managers','Interview Preparation Guide','Ready Mock Preparation']} />
+          <FooterColumn title="Programs" links={programs.map((program) => ({ label: program.title, href: program.program_url || '/membership#curriculum' }))} />
           <FooterColumn title="Interview Support" links={['Book your mock interview','Preparation checklist','Feedback and next steps']} />
           <FooterColumn title="Support" links={['About the programs','Contact support','Privacy and security']} />
         </div>
@@ -454,24 +449,27 @@ function FooterColumn({ title, links }) {
   return (
     <div className="footer-column">
       <h4>{title}</h4>
-      {links.map((link) => (
+      {links.map((item) => {
+        const link = typeof item === 'string' ? item : item.label;
+        const href = typeof item === 'string' ? (
+          link === 'Book your mock interview'
+            ? '/membership#curriculum'
+            : link === 'Preparation checklist'
+              ? '#courses'
+              : link === 'Contact support' || link === 'Privacy and security'
+                ? '/support'
+                : link === 'Feedback and next steps'
+                  ? '#membership'
+                  : '#top'
+        ) : item.href;
+        return (
         <a
-          href={
-            link === 'Book your mock interview'
-              ? '/membership#curriculum'
-              : link === 'Preparation checklist'
-                ? '#courses'
-                : link === 'Contact support' || link === 'Privacy and security'
-              ? '/support'
-              : link === 'Feedback and next steps'
-                ? '#membership'
-                : '#top'
-          }
+          href={href}
           key={link}
         >
           {link}
         </a>
-      ))}
+      ); })}
     </div>
   );
 }

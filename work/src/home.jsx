@@ -292,7 +292,6 @@ function Home() {
                   <th>Format</th>
                   <th>Session Timings</th>
                   <th>Lead Mentor</th>
-                  <th>Capacity</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -321,12 +320,9 @@ function Home() {
                       </div>
                     </td>
                     <td>
-                      <span className={`capacity ${cohort.status}`}>{cohort.status === 'open' && cohort.seats_available > 0 ? `${cohort.seats_available} seats left` : cohort.status === 'soon' ? 'Coming soon' : 'Closed'}</span>
-                    </td>
-                    <td>
                       {cohort.status === 'open' && cohort.seats_available > 0
                         ? <a className="dark-button" href={cohort.booking_url || '/membership#curriculum'}>Book session</a>
-                        : <span className="dark-button" aria-disabled="true">Unavailable</span>}
+                        : <a className="dark-button" href="/mock-interview">Book mock</a>}
                     </td>
                   </tr>
                 ))}

@@ -63,10 +63,13 @@ function TrackCard({ program, index }) {
   const featured = program.featured;
   const statusLabel = program.status === 'coming_soon' ? 'Coming soon' : 'Available now';
   const id = `track-${program.id}`;
+  const isEnrollmentProgram = ['ai-for-qa-managers', 'interview-preparation-guide'].includes(program.id);
+  const actionLabel = isEnrollmentProgram ? 'Enroll' : (program.action_label || 'Enroll now');
+  const actionUrl = isEnrollmentProgram ? '/checkout' : (program.action_url || '/checkout');
   return <article className={`track-card ${featured ? 'featured-track' : ''}`} id={id} tabIndex={-1}>
     {featured && <b className="track-ribbon">FEATURED PROGRAM</b>}
     <div><div className="track-meta"><span className={featured ? 'blue-text' : ''}>PROGRAM #{String(index + 1).padStart(2, '0')}</span><b>{statusLabel}</b></div><h4>{program.title}</h4><p>{program.description}</p><div className="tag-list">{(program.highlights || []).map((tag) => <span key={tag}>{tag}</span>)}</div></div>
-    <footer><div><strong>{program.price_label}</strong><small>{program.format}</small></div><a href={program.action_url || '/checkout'}>{program.action_label || 'Enroll now'} →</a></footer>
+    <footer><div><strong>{program.price_label}</strong><small>{program.format}</small></div><a href={actionUrl}>{actionLabel} →</a></footer>
   </article>;
 }
 function VideoPreview({ video, playing, onToggle }) {

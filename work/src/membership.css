@@ -12,3 +12,12 @@
 .upcoming-grid button:hover,.upcoming-grid button:focus-visible{color:#fff;background:var(--c-blue);border-color:var(--c-blue)}
 .featured-track footer a{transition:background .2s,border-color .2s,box-shadow .2s,transform .2s}
 .featured-track footer a:hover,.featured-track footer a:focus-visible{color:#fff;background:var(--c-ink);border-color:var(--c-ink);box-shadow:0 0 0 3px rgba(11,28,48,.16),0 0 20px rgba(11,28,48,.2);transform:translateY(-1px)}
+.classroom-header-row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:28px;flex-wrap:wrap}
+.classroom-header-row .section-intro{margin-bottom:0}
+.classroom-action-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.classroom-action-btn{padding:11px 16px;color:var(--c-ink);background:#fff;border:1px solid var(--c-line);border-radius:7px;font:600 13px Inter,sans-serif;cursor:pointer;transition:background .18s,color .18s,border-color .18s,box-shadow .18s,transform .18s}
+.classroom-action-btn.primary{color:#fff;background:var(--c-blue);border-color:var(--c-blue)}
+.classroom-action-btn.active{color:#fff;background:var(--c-ink);border-color:var(--c-ink)}
+.classroom-action-btn.primary.active{color:#fff;background:var(--c-primary);border-color:var(--c-primary)}
+.membership-video-list button.classroom-show-all-link{background:var(--c-low);border-style:dashed;border-color:var(--c-blue)}
+.membership-video-list button.classroom-show-all-link strong{color:var(--c-primary)}

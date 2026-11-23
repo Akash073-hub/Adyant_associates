@@ -21,6 +21,7 @@ function SignIn() {
         }),
       });
       const email = String(form.get('email')).trim().toLowerCase();
+      window.localStorage.removeItem('adyant_access_mode');
       window.localStorage.setItem('adyant_member_email', email);
       window.localStorage.setItem('adyant_student_email', email);
       window.localStorage.setItem('adyant_member_token', result.token);

@@ -169,10 +169,6 @@ function Home() {
               Learn how to lead with AI, prepare strategically, and practice with realistic mock interviews.
             </p>
 
-            <div className="hero-actions">
-              <a className="blue-button" href="#courses">Explore Programs →</a>
-            </div>
-
             <div className="metrics">
               <div>
                 <strong>3</strong>
@@ -264,7 +260,9 @@ function Home() {
                   </div>
                   <span className="discount">50% OFF</span>
                   <div className="card-actions">
-                    <a className="syllabus-button" href={course.syllabus_url || '/membership#curriculum'}>Syllabus</a>
+                    {course.syllabus_url && course.syllabus_url.startsWith('/syllabus') && (
+                      <a className="syllabus-button" href={course.syllabus_url}>Syllabus</a>
+                    )}
                     <a className="dark-button" href={course.action_url || '/membership#curriculum'}>{course.price_label || 'Explore'}</a>
                   </div>
                 </div>

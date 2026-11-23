@@ -20,6 +20,14 @@ function AdminVideos() {
   const [programs, setPrograms] = useState([]);
   const [cohorts, setCohorts] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [studentLeads, setStudentLeads] = useState([]);
+  const [memberLogins, setMemberLogins] = useState([]);
+  const [visitorSummary, setVisitorSummary] = useState({
+    unique_student_visitors: 0,
+    total_student_visits: 0,
+    total_logins: 0,
+    successful_logins: 0,
+  });
   const [videoDraft, setVideoDraft] = useState(emptyVideo);
   const [programDraft, setProgramDraft] = useState(emptyProgram);
   const [cohortDraft, setCohortDraft] = useState(emptyCohort);
@@ -39,16 +47,25 @@ function AdminVideos() {
       return;
     }
     try {
-      const [videoResult, programResult, cohortResult, bookingResult] = await Promise.all([
+      const [videoResult, programResult, cohortResult, bookingResult, visitorResult] = await Promise.all([
         apiRequest('/admin/videos', adminOptions),
         apiRequest('/admin/programs', adminOptions),
         apiRequest('/admin/cohorts', adminOptions),
         apiRequest('/admin/bookings', adminOptions),
+        apiRequest('/admin/visitors', adminOptions),
       ]);
       setVideos(videoResult.videos || []);
       setPrograms(programResult.programs || []);
       setCohorts(cohortResult.cohorts || []);
       setBookings(bookingResult.bookings || []);
+      setStudentLeads(visitorResult.student_leads || []);
+      setMemberLogins(visitorResult.member_logins || []);
+      setVisitorSummary(visitorResult.summary || {
+        unique_student_visitors: 0,
+        total_student_visits: 0,
+        total_logins: 0,
+        successful_logins: 0,
+      });
       setCohortDraft((current) => current.program_id ? current : { ...emptyCohort, program_id: programResult.programs?.[0]?.id || '' });
     } catch (requestError) {
       if (requestError.message.includes('Admin session')) {
@@ -167,6 +184,7 @@ function AdminVideos() {
     ['programs', `Programs (${programs.length})`],
     ['cohorts', `Cohorts (${cohorts.length})`],
     ['bookings', `Bookings (${bookings.length})`],
+    ['visitors', `Visitors & Logins (${visitorSummary.total_student_visits + visitorSummary.total_logins})`],
   ];
 
   return <main className="admin-management-page">
@@ -221,6 +239,25 @@ function AdminVideos() {
         </section>}
 
         {tab === 'bookings' && <section className="admin-bookings-list"><h2>Bookings <b>{bookings.length}</b></h2>{bookings.length ? <div className="admin-bookings-scroll"><table><thead><tr><th>Member name</th><th>Email</th><th>Preferred time</th><th>Payment</th><th>Status</th><th>Manage</th></tr></thead><tbody>{bookings.map((booking) => <BookingRow booking={booking} onSave={updateBooking} onDelete={() => deleteResource(`/admin/bookings/${encodeURIComponent(booking.id)}`, 'Booking deleted.')} key={booking.id} />)}</tbody></table></div> : <p className="admin-management-empty">No bookings have been submitted yet.</p>}</section>}
+
+        {tab === 'visitors' && <section className="admin-visitors-section">
+          <div className="admin-stats-grid">
+            <article className="admin-stat-card"><span>Unique student visitors</span><strong>{visitorSummary.unique_student_visitors}</strong></article>
+            <article className="admin-stat-card"><span>Total browse visits</span><strong>{visitorSummary.total_student_visits}</strong></article>
+            <article className="admin-stat-card"><span>Total login records</span><strong>{visitorSummary.total_logins}</strong></article>
+            <article className="admin-stat-card"><span>Successful logins</span><strong>{visitorSummary.successful_logins}</strong></article>
+          </div>
+
+          <section className="admin-bookings-list">
+            <h2>Browse as a student visitors <b>{studentLeads.length}</b></h2>
+            {studentLeads.length ? <div className="admin-bookings-scroll"><table><thead><tr><th>Email</th><th>Visits</th><th>Interest</th><th>Current status</th><th>First visit</th><th>Last visit</th></tr></thead><tbody>{studentLeads.map((lead) => <tr key={lead.id}><td><strong>{lead.email}</strong>{lead.current_status_details && <small>{lead.current_status_details}</small>}</td><td><strong>{lead.visit_count || 1}</strong></td><td>{lead.interest || '—'}</td><td>{lead.current_status || '—'}</td><td>{lead.created_date} {lead.created_time}</td><td>{lead.last_visited_date || lead.created_date} {lead.last_visited_time || lead.created_time}</td></tr>)}</tbody></table></div> : <p className="admin-management-empty">No student browse visits recorded yet.</p>}
+          </section>
+
+          <section className="admin-bookings-list">
+            <h2>Member login history <b>{memberLogins.length}</b></h2>
+            {memberLogins.length ? <div className="admin-bookings-scroll"><table><thead><tr><th>Email</th><th>Access type</th><th>Status</th><th>Login #</th><th>Date &amp; time</th></tr></thead><tbody>{memberLogins.map((entry) => <tr key={entry.id}><td><strong>{entry.email}</strong>{entry.name && <small>{entry.name}</small>}</td><td>{entry.access_type || '—'}</td><td>{entry.status || '—'}</td><td>{entry.login_count || 1}</td><td>{entry.created_date} {entry.created_time}</td></tr>)}</tbody></table></div> : <p className="admin-management-empty">No member logins recorded yet.</p>}
+          </section>
+        </section>}
       </>}
     </div>
     <footer className="admin-management-footer">© 2026 Adyant Associates</footer>

@@ -83,6 +83,57 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(lead["interest"], "Agentic AI Engineering")
         self.assertEqual(lead["current_status"], "College / university student")
         self.assertEqual(lead["current_status_details"], "Studying computer science")
+        self.assertEqual(lead["visit_count"], 1)
+        self.assertEqual(response.json["total_visitors"], 1)
+        self.assertEqual(response.json["total_visits"], 1)
+
+    def test_student_lead_increments_visit_count_for_repeat_visitor(self):
+        self.client.post("/api/student-leads", json={"email": "visitor@example.com", "interest": "QA"})
+        response = self.client.post("/api/student-leads", json={"email": "Visitor@Example.com"})
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(len(self.store.data["student_leads"]), 1)
+        self.assertEqual(self.store.data["student_leads"][0]["visit_count"], 2)
+        self.assertEqual(self.store.data["student_leads"][0]["interest"], "QA")
+        self.assertEqual(response.json["total_visitors"], 1)
+        self.assertEqual(response.json["total_visits"], 2)
+
+    def test_member_login_is_recorded_in_store(self):
+        self.store.data = {
+            "users": [{"id": "member-1", "email": "alex@example.com", "name": "Alex", "is_member": True}]
+        }
+        response = self.client.post("/api/auth/login", json={"email": "alex@example.com"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(self.store.data["member_logins"]), 1)
+        self.assertEqual(self.store.data["member_logins"][0]["email"], "alex@example.com")
+        self.assertEqual(self.store.data["member_logins"][0]["status"], "success")
+        self.assertEqual(self.store.data["member_logins"][0]["login_count"], 1)
+        self.assertEqual(self.store.data["users"][0]["login_count"], 1)
+
+    def test_admin_visitors_returns_counts_and_logins(self):
+        admin_client = create_app(
+            {
+                "SECRET_KEY": "test-secret",
+                "CORS_ORIGINS": "http://localhost:3000",
+                "ADMIN_PASSWORD": "secret-admin-password",
+            },
+            self.store,
+        ).test_client()
+        admin_client.post("/api/student-leads", json={"email": "student@example.com"})
+        admin_client.post("/api/student-leads", json={"email": "student@example.com"})
+        admin_client.post("/api/auth/login", json={"email": "visitor@example.com"})
+        login_res = admin_client.post(
+            "/api/auth/admin-login",
+            json={"email": "admin@example.com", "password": "secret-admin-password"},
+        )
+        token = login_res.json["token"]
+        visitors_res = admin_client.get(
+            "/api/admin/visitors",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        self.assertEqual(visitors_res.status_code, 200)
+        self.assertEqual(visitors_res.json["summary"]["unique_student_visitors"], 1)
+        self.assertEqual(visitors_res.json["summary"]["total_student_visits"], 2)
+        self.assertEqual(visitors_res.json["summary"]["total_logins"], 1)
 
     def test_missing_github_configuration_is_explicit(self):
         client = create_app({"SECRET_KEY": "test-secret", "CORS_ORIGINS": "*"}).test_client()

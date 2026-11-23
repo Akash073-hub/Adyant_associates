@@ -32,6 +32,7 @@ from flask import Flask, jsonify, request
 from dotenv import load_dotenv
 
 
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 load_dotenv()
 
 DISPLAY_TIME_ZONE = ZoneInfo("Asia/Kolkata")
@@ -174,6 +175,7 @@ def normalize_cohort(payload: dict[str, Any], programs: list[dict[str, Any]]) ->
 
 DEFAULT_STORE: dict[str, list[dict[str, Any]]] = {
     "users": [],
+    "member_logins": [],
     "student_leads": [],
     "admins": [],
     "assessments": [],
@@ -218,7 +220,7 @@ PROGRAMS = [
         "alumni": "New",
         "old_price": "",
         "highlights": ["Role research", "Answer frameworks", "Practice plan"],
-        "syllabus_url": "/membership#curriculum",
+        "syllabus_url": "",
         "action_url": "/membership#curriculum",
         "program_url": "/membership#track-interview-preparation-guide",
         "featured": False,
@@ -236,7 +238,7 @@ PROGRAMS = [
         "alumni": "New",
         "old_price": "",
         "highlights": ["Mock questions", "Expert feedback", "Next steps"],
-        "syllabus_url": "/membership#curriculum",
+        "syllabus_url": "",
         "action_url": "/checkout",
         "program_url": "/membership#track-ready-mock-preparation",
         "featured": False,
@@ -415,7 +417,18 @@ class GitHubStore:
         student_leads_path = f"{parent}/student_leads.csv" if parent else "student_leads.csv"
         for attempt in range(3):
             student_leads_csv = io.StringIO(newline="")
-            columns = ["id", "created_date", "created_time", "email", "interest", "current_status", "current_status_details"]
+            columns = [
+                "id",
+                "created_date",
+                "created_time",
+                "last_visited_date",
+                "last_visited_time",
+                "visit_count",
+                "email",
+                "interest",
+                "current_status",
+                "current_status_details",
+            ]
             writer = csv.DictWriter(student_leads_csv, fieldnames=columns, extrasaction="ignore")
             writer.writeheader()
             writer.writerows(normalized["student_leads"])
@@ -433,6 +446,7 @@ class GitHubStore:
 
         # Publish the remaining submitted records as their own GitHub tables.
         table_exports = {
+            "member_logins": ["id", "created_date", "created_time", "email", "name", "access_type", "status", "login_count"],
             "support_requests": ["id", "created_date", "created_time", "email", "question"],
             "mock_interview_requests": ["id", "created_date", "created_time", "name", "email", "message"],
             "reset_requests": ["id", "created_date", "created_time", "email"],
@@ -523,7 +537,7 @@ class GitHubStore:
     @staticmethod
     def _normalise(data: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
         normalized = {
-            key: value if isinstance(value, list) else []
+            key: json.loads(json.dumps(value)) if isinstance(value, list) else []
             for key, value in {**DEFAULT_STORE, **data}.items()
         }
         for records in normalized.values():
@@ -809,33 +823,64 @@ def create_app(
             return jsonify({"error": "Enter a valid email address."}), 400
         email = payload["email"].strip().lower()
         developer_email = env.get("DEVELOPER_ACCESS_EMAIL", "").strip().lower()
-        data, _ = persistence.read()
-        member_record = next((user for user in data["users"] if is_active_member_record(user, email)), None)
-        is_member = member_record is not None or any(
-            booking.get("email", "").strip().lower() == email
-            and booking.get("status", "").lower() in {"paid", "confirmed", "active"}
-            for booking in data["bookings"]
-        )
-        if not is_member:
-            if developer_email and email == developer_email:
-                return jsonify({
-                    "member": True,
-                    "developer_access": True,
-                    "token": issue_token(email),
-                    "name": "",
-                    "message": "Developer access confirmed.",
-                }), 200
-            return jsonify({"member": False, "message": "We couldn't find an active membership for this email. Browse as a student or contact support if you believe this is a mistake."}), 403
-        if member_record and member_record.get("password_hash"):
-            password = payload.get("password", "")
-            if not isinstance(password, str) or not password_matches(
-                password, member_record.get("password_salt", ""), member_record["password_hash"]
-            ):
-                return jsonify({"error": "The email or password is incorrect."}), 401
+        with persistence_lock:
+            data, sha = persistence.read()
+            member_record = next((user for user in data["users"] if is_active_member_record(user, email)), None)
+            is_member = member_record is not None or any(
+                booking.get("email", "").strip().lower() == email
+                and booking.get("status", "").lower() in {"paid", "confirmed", "active"}
+                for booking in data["bookings"]
+            )
+            now = datetime.now(DISPLAY_TIME_ZONE)
+            now_date = now.strftime("%d %b %Y")
+            now_time = now.strftime("%I:%M %p")
+            prior_logins = sum(
+                1 for entry in data["member_logins"]
+                if entry.get("email", "").strip().lower() == email
+            )
+
+            def record_login(access_type: str, status: str, name: str = "") -> None:
+                data["member_logins"].append({
+                    "id": secrets.token_urlsafe(12),
+                    "created_date": now_date,
+                    "created_time": now_time,
+                    "email": email,
+                    "name": name,
+                    "access_type": access_type,
+                    "status": status,
+                    "login_count": prior_logins + 1,
+                })
+                if status == "success" and member_record is not None:
+                    member_record["last_login_date"] = now_date
+                    member_record["last_login_time"] = now_time
+                    member_record["login_count"] = int(member_record.get("login_count", 0)) + 1
+                persistence.write(data, sha)
+
+            if not is_member:
+                if developer_email and email == developer_email:
+                    record_login("developer", "success")
+                    return jsonify({
+                        "member": True,
+                        "developer_access": True,
+                        "token": issue_token(email),
+                        "name": "",
+                        "message": "Developer access confirmed.",
+                    }), 200
+                record_login("non_member", "not_member")
+                return jsonify({"member": False, "message": "We couldn't find an active membership for this email. Browse as a student or contact support if you believe this is a mistake."}), 403
+            if member_record and member_record.get("password_hash"):
+                password = payload.get("password", "")
+                if not isinstance(password, str) or not password_matches(
+                    password, member_record.get("password_salt", ""), member_record["password_hash"]
+                ):
+                    record_login("member", "invalid_password", member_record.get("name", ""))
+                    return jsonify({"error": "The email or password is incorrect."}), 401
+            member_name = member_record.get("name", "") if member_record else ""
+            record_login("member", "success", member_name)
         return jsonify({
             "member": True,
             "token": issue_token(email),
-            "name": member_record.get("name", "") if member_record else "",
+            "name": member_name,
             "message": "An active membership was found for this email.",
         }), 200
 
@@ -890,13 +935,76 @@ def create_app(
         email = payload["email"].strip().lower()
         if "@" not in email:
             return jsonify({"error": "Enter a valid email address."}), 400
-        record = save_record("student_leads", {
-            "email": email,
-            "interest": str(payload.get("interest", "")).strip(),
-            "current_status": str(payload.get("current_status", "")).strip(),
-            "current_status_details": str(payload.get("current_status_details", "")).strip(),
+        interest = str(payload.get("interest", "")).strip()
+        current_status = str(payload.get("current_status", "")).strip()
+        current_status_details = str(payload.get("current_status_details", "")).strip()
+        with persistence_lock:
+            data, sha = persistence.read()
+            now = datetime.now(DISPLAY_TIME_ZONE)
+            now_date = now.strftime("%d %b %Y")
+            now_time = now.strftime("%I:%M %p")
+            existing = next(
+                (item for item in data["student_leads"] if item.get("email", "").strip().lower() == email),
+                None,
+            )
+            if existing is not None:
+                existing["visit_count"] = int(existing.get("visit_count", 1)) + 1
+                existing["last_visited_date"] = now_date
+                existing["last_visited_time"] = now_time
+                if interest:
+                    existing["interest"] = interest
+                if current_status:
+                    existing["current_status"] = current_status
+                if current_status_details:
+                    existing["current_status_details"] = current_status_details
+                record = existing
+            else:
+                record = {
+                    "id": secrets.token_urlsafe(12),
+                    "created_date": now_date,
+                    "created_time": now_time,
+                    "last_visited_date": now_date,
+                    "last_visited_time": now_time,
+                    "visit_count": 1,
+                    "email": email,
+                    "interest": interest,
+                    "current_status": current_status,
+                    "current_status_details": current_status_details,
+                }
+                data["student_leads"].append(record)
+            persistence.write(data, sha)
+            total_visitors = len(data["student_leads"])
+            total_visits = sum(int(item.get("visit_count", 1)) for item in data["student_leads"])
+        return jsonify({
+            "lead": record,
+            "total_visitors": total_visitors,
+            "total_visits": total_visits,
+        }), 201
+
+    @app.get("/api/admin/visitors")
+    def admin_visitors() -> Any:
+        require_admin()
+        data, _ = persistence.read()
+        leads = [
+            {
+                **lead,
+                "visit_count": int(lead.get("visit_count", 1)),
+                "last_visited_date": lead.get("last_visited_date") or lead.get("created_date", ""),
+                "last_visited_time": lead.get("last_visited_time") or lead.get("created_time", ""),
+            }
+            for lead in reversed(data["student_leads"])
+        ]
+        logins = list(reversed(data["member_logins"]))
+        return jsonify({
+            "student_leads": leads,
+            "member_logins": logins,
+            "summary": {
+                "unique_student_visitors": len(leads),
+                "total_student_visits": sum(item["visit_count"] for item in leads),
+                "total_logins": len(logins),
+                "successful_logins": sum(1 for item in logins if item.get("status") == "success"),
+            },
         })
-        return jsonify({"lead": record}), 201
 
     @app.post("/api/auth/admin-login")
     def admin_login() -> Any:

@@ -51,5 +51,10 @@
 .admin-bookings-list td select,.admin-bookings-list td input{min-width:130px;min-height:31px;padding:6px;font-size:9px}
 .admin-bookings-list td button{margin-right:5px;padding:7px 8px}
 .admin-management-footer{max-width:1380px;padding:14px 0;margin:0 auto;color:#939aaa;border-top:1px solid #e3e8f1;font-size:9px}
-@media(max-width:900px){.admin-management-grid{grid-template-columns:1fr}.admin-management-form{order:0}.admin-management-list{order:1}}
+.admin-visitors-section{display:flex;flex-direction:column;gap:15px}
+.admin-stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.admin-stat-card{padding:16px 18px;background:#fff;border:1px solid #e4e8f0;border-radius:9px;box-shadow:0 2px 7px #263b5a08}
+.admin-stat-card span{display:block;color:#758198;font:700 8px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+.admin-stat-card strong{display:block;margin-top:8px;color:#13223a;font-size:24px;letter-spacing:-.03em}
+@media(max-width:900px){.admin-management-grid{grid-template-columns:1fr}.admin-management-form{order:0}.admin-management-list{order:1}.admin-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.admin-management-page{padding:0 13px}.admin-management-main{padding-top:23px}.admin-management-title h1{font-size:22px}.admin-management-tabs{overflow:auto}.admin-management-tabs button{flex:0 0 auto;padding:9px 11px;font-size:9px}.admin-management-form,.admin-management-list,.admin-bookings-list{padding:15px}.admin-form-row{grid-template-columns:1fr;gap:0}.admin-item{flex-direction:column}.admin-item-actions{align-self:flex-end}.admin-bookings-list table{min-width:850px}}

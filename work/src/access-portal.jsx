@@ -1,5 +1,5 @@
 import './access-portal.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiRequest } from './api';
 
 function AccessPortal({ view = 'welcome' }) {
@@ -9,6 +9,14 @@ function AccessPortal({ view = 'welcome' }) {
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  useEffect(() => {
+    if (!browse) return;
+    window.localStorage.setItem('adyant_access_mode', 'browse');
+    window.localStorage.removeItem('adyant_member_email');
+    window.localStorage.removeItem('adyant_member_token');
+    window.localStorage.removeItem('adyant_member_name');
+  }, [browse]);
+
   async function handleBrowse(event) {
     event.preventDefault();
     setBusy(true); setError('');
@@ -17,6 +25,10 @@ function AccessPortal({ view = 'welcome' }) {
       const email = String(form.get('email')).trim().toLowerCase();
       await apiRequest('/student-leads', { method: 'POST', body: JSON.stringify({ email, interest: form.get('interest'), current_status: form.get('current_status'), current_status_details: form.get('current_status_details') }) });
       setSubmitted(true);
+      window.localStorage.setItem('adyant_access_mode', 'browse');
+      window.localStorage.removeItem('adyant_member_email');
+      window.localStorage.removeItem('adyant_member_token');
+      window.localStorage.removeItem('adyant_member_name');
       window.localStorage.setItem('adyant_student_email', email);
       window.location.assign('/home');
     } catch (requestError) { setError(requestError.message); }

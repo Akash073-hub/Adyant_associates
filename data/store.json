@@ -1,0 +1,24 @@
+{
+  "users": [],
+  "student_leads": [
+    {
+      "id": "LpP_yQtEj_fIGrMG",
+      "created_date": "23 Nov 2026",
+      "created_time": "03:42 PM",
+      "email": "akashramachnadrabhatbca24@rvu.edu.in",
+      "interest": "Software Testing and Test Automation",
+      "current_status": "Studying another subject",
+      "current_status_details": ""
+    }
+  ],
+  "admins": [],
+  "assessments": [],
+  "support_requests": [],
+  "mock_interview_requests": [],
+  "reset_requests": [],
+  "bookings": [],
+  "videos": [],
+  "programs": [],
+  "cohorts": [],
+  "catalog_meta": []
+}

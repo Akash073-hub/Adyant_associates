@@ -32,9 +32,11 @@ from flask import Flask, jsonify, request
 from dotenv import load_dotenv
 
 
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 load_dotenv()
 
 DISPLAY_TIME_ZONE = ZoneInfo("Asia/Kolkata")
+MEMBER_ACCESS_ALLOWLIST = {"akashrbhat73@gmail.com"}
 
 
 def split_datetime(value: Any) -> tuple[str, str]:
@@ -174,6 +176,7 @@ def normalize_cohort(payload: dict[str, Any], programs: list[dict[str, Any]]) ->
 
 DEFAULT_STORE: dict[str, list[dict[str, Any]]] = {
     "users": [],
+    "member_logins": [],
     "student_leads": [],
     "admins": [],
     "assessments": [],
@@ -181,6 +184,7 @@ DEFAULT_STORE: dict[str, list[dict[str, Any]]] = {
     "mock_interview_requests": [],
     "reset_requests": [],
     "bookings": [],
+    "payments": [],
     "videos": [],
     "programs": [],
     "cohorts": [],
@@ -218,7 +222,7 @@ PROGRAMS = [
         "alumni": "New",
         "old_price": "",
         "highlights": ["Role research", "Answer frameworks", "Practice plan"],
-        "syllabus_url": "/membership#curriculum",
+        "syllabus_url": "",
         "action_url": "/membership#curriculum",
         "program_url": "/membership#track-interview-preparation-guide",
         "featured": False,
@@ -236,7 +240,7 @@ PROGRAMS = [
         "alumni": "New",
         "old_price": "",
         "highlights": ["Mock questions", "Expert feedback", "Next steps"],
-        "syllabus_url": "/membership#curriculum",
+        "syllabus_url": "",
         "action_url": "/checkout",
         "program_url": "/membership#track-ready-mock-preparation",
         "featured": False,
@@ -415,7 +419,18 @@ class GitHubStore:
         student_leads_path = f"{parent}/student_leads.csv" if parent else "student_leads.csv"
         for attempt in range(3):
             student_leads_csv = io.StringIO(newline="")
-            columns = ["id", "created_date", "created_time", "email", "interest", "current_status", "current_status_details"]
+            columns = [
+                "id",
+                "created_date",
+                "created_time",
+                "last_visited_date",
+                "last_visited_time",
+                "visit_count",
+                "email",
+                "interest",
+                "current_status",
+                "current_status_details",
+            ]
             writer = csv.DictWriter(student_leads_csv, fieldnames=columns, extrasaction="ignore")
             writer.writeheader()
             writer.writerows(normalized["student_leads"])
@@ -433,10 +448,12 @@ class GitHubStore:
 
         # Publish the remaining submitted records as their own GitHub tables.
         table_exports = {
+            "member_logins": ["id", "created_date", "created_time", "email", "name", "access_type", "status", "login_count"],
             "support_requests": ["id", "created_date", "created_time", "email", "question"],
             "mock_interview_requests": ["id", "created_date", "created_time", "name", "email", "message"],
             "reset_requests": ["id", "created_date", "created_time", "email"],
-            "bookings": ["id", "created_date", "created_time", "name", "email", "preferred_time", "payment_method", "promo_code", "discount_percent", "status"],
+            "bookings": ["id", "created_date", "created_time", "name", "email", "plan_id", "amount_inr", "currency", "preferred_time", "payment_method", "promo_code", "discount_percent", "razorpay_order_id", "razorpay_payment_id", "status"],
+            "payments": ["id", "created_date", "created_time", "booking_id", "email", "name", "plan_id", "amount_inr", "currency", "razorpay_order_id", "razorpay_payment_id", "status", "source"],
             "videos": ["id", "created_date", "created_time", "title", "url", "description"],
             "programs": ["id", "title", "type", "format", "description", "price_label", "action_label", "status", "highlights", "syllabus_url", "action_url", "program_url"],
             "cohorts": ["id", "program_id", "title", "start_date", "schedule", "time_ist", "time_est", "instructor", "instructor_role", "seats_total", "seats_taken", "status", "booking_url"],
@@ -523,7 +540,7 @@ class GitHubStore:
     @staticmethod
     def _normalise(data: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
         normalized = {
-            key: value if isinstance(value, list) else []
+            key: json.loads(json.dumps(value)) if isinstance(value, list) else []
             for key, value in {**DEFAULT_STORE, **data}.items()
         }
         for records in normalized.values():
@@ -538,11 +555,132 @@ class GitHubStore:
         return normalized
 
 
+def is_placeholder_secret(value: str) -> bool:
+    normalized = value.strip().lower()
+    return not normalized or "replace" in normalized or normalized.startswith("your-")
+
+
+def razorpay_credentials(env: dict[str, str]) -> tuple[str, str]:
+    key_id = env.get("RAZORPAY_KEY_ID", "").strip()
+    key_secret = env.get("RAZORPAY_KEY_SECRET", "").strip()
+    if is_placeholder_secret(key_id) or is_placeholder_secret(key_secret):
+        return "", ""
+    return key_id, key_secret
+
+
+def payment_plans(env: dict[str, str]) -> list[dict[str, Any]]:
+    def parse_inr(var_name: str, default: int) -> int:
+        raw = env.get(var_name, "").strip()
+        try:
+            amount = int(raw)
+            return amount if amount > 0 else default
+        except ValueError:
+            return default
+
+    currency = env.get("RAZORPAY_CURRENCY", "INR").strip().upper() or "INR"
+    return [
+        {
+            "id": "ready-mock-preparation",
+            "title": "Ready Mock Preparation",
+            "badge": "LIVE MOCK INTERVIEW // 1:1",
+            "format": "Focused 1:1 mock interview",
+            "coach": "Senior QA interviewer",
+            "amount_inr": parse_inr("MOCK_INTERVIEW_FEE_INR", 1999),
+            "currency": currency,
+            "requires_preferred_time": True,
+        },
+        {
+            "id": "ai-for-qa-managers",
+            "title": "AI for QA Managers",
+            "badge": "LEADERSHIP PROGRAM // SELF-PACED + COHORT",
+            "format": "GenAI, AI Agents, MCP & n8n",
+            "coach": "Adyant Associates QA Faculty",
+            "amount_inr": parse_inr("AI_QA_PROGRAM_FEE_INR", 4999),
+            "currency": currency,
+            "requires_preferred_time": False,
+        },
+        {
+            "id": "interview-preparation-guide",
+            "title": "Interview Preparation Guide",
+            "badge": "CAREER PREP // FRAMEWORKS & PLAYBOOKS",
+            "format": "Self-paced interview prep",
+            "coach": "Senior QA Leadership Mentors",
+            "amount_inr": parse_inr("INTERVIEW_PREP_FEE_INR", 2499),
+            "currency": currency,
+            "requires_preferred_time": False,
+        },
+    ]
+
+
+def create_razorpay_order_via_api(
+    key_id: str,
+    key_secret: str,
+    amount_paise: int,
+    currency: str,
+    receipt: str,
+    notes: dict[str, str],
+) -> dict[str, Any]:
+    auth_bytes = base64.b64encode(f"{key_id}:{key_secret}".encode("utf-8")).decode("ascii")
+    payload = json.dumps({
+        "amount": amount_paise,
+        "currency": currency,
+        "receipt": receipt[:40],
+        "notes": notes,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.razorpay.com/v1/orders",
+        data=payload,
+        headers={
+            "Authorization": f"Basic {auth_bytes}",
+            "Content-Type": "application/json",
+            "User-Agent": "adyant-associates-api",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        detail = error.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Razorpay order creation failed ({error.code}): {detail}") from error
+    except urllib.error.URLError as error:
+        raise RuntimeError(f"Razorpay API is unavailable: {error.reason}") from error
+
+
+def verify_razorpay_payment_signature(
+    order_id: str, payment_id: str, signature: str, key_secret: str
+) -> bool:
+    if not order_id or not payment_id or not signature or not key_secret:
+        return False
+    expected = hmac.new(
+        key_secret.encode("utf-8"),
+        f"{order_id}|{payment_id}".encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature)
+
+
+def verify_razorpay_webhook_signature(
+    raw_body: bytes, signature: str, webhook_secret: str
+) -> bool:
+    if not raw_body or not signature or not webhook_secret:
+        return False
+    expected = hmac.new(
+        webhook_secret.encode("utf-8"),
+        raw_body,
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature)
+
+
 def create_app(
-    environ: dict[str, str] | None = None, store: GitHubStore | None = None
+    environ: dict[str, str] | None = None,
+    store: GitHubStore | None = None,
+    razorpay_order_creator: Any = None,
 ) -> Flask:
     app = Flask(__name__)
     env = environ or os.environ
+    order_creator = razorpay_order_creator or create_razorpay_order_via_api
     app.config["SECRET_KEY"] = env.get("SECRET_KEY", "").strip()
     app.config["CORS_ORIGINS"] = {
         origin.strip()
@@ -809,33 +947,67 @@ def create_app(
             return jsonify({"error": "Enter a valid email address."}), 400
         email = payload["email"].strip().lower()
         developer_email = env.get("DEVELOPER_ACCESS_EMAIL", "").strip().lower()
-        data, _ = persistence.read()
-        member_record = next((user for user in data["users"] if is_active_member_record(user, email)), None)
-        is_member = member_record is not None or any(
-            booking.get("email", "").strip().lower() == email
-            and booking.get("status", "").lower() in {"paid", "confirmed", "active"}
-            for booking in data["bookings"]
-        )
-        if not is_member:
-            if developer_email and email == developer_email:
-                return jsonify({
-                    "member": True,
-                    "developer_access": True,
-                    "token": issue_token(email),
-                    "name": "",
-                    "message": "Developer access confirmed.",
-                }), 200
-            return jsonify({"member": False, "message": "We couldn't find an active membership for this email. Browse as a student or contact support if you believe this is a mistake."}), 403
-        if member_record and member_record.get("password_hash"):
-            password = payload.get("password", "")
-            if not isinstance(password, str) or not password_matches(
-                password, member_record.get("password_salt", ""), member_record["password_hash"]
-            ):
-                return jsonify({"error": "The email or password is incorrect."}), 401
+        allowlisted_email = email in MEMBER_ACCESS_ALLOWLIST
+        with persistence_lock:
+            data, sha = persistence.read()
+            member_record = next((user for user in data["users"] if is_active_member_record(user, email)), None)
+            is_member = member_record is not None or any(
+                booking.get("email", "").strip().lower() == email
+                and booking.get("status", "").lower() in {"paid", "confirmed", "active"}
+                for booking in data["bookings"]
+            )
+            now = datetime.now(DISPLAY_TIME_ZONE)
+            now_date = now.strftime("%d %b %Y")
+            now_time = now.strftime("%I:%M %p")
+            prior_logins = sum(
+                1 for entry in data["member_logins"]
+                if entry.get("email", "").strip().lower() == email
+            )
+
+            def record_login(access_type: str, status: str, name: str = "") -> None:
+                data["member_logins"].append({
+                    "id": secrets.token_urlsafe(12),
+                    "created_date": now_date,
+                    "created_time": now_time,
+                    "email": email,
+                    "name": name,
+                    "access_type": access_type,
+                    "status": status,
+                    "login_count": prior_logins + 1,
+                })
+                if status == "success" and member_record is not None:
+                    member_record["last_login_date"] = now_date
+                    member_record["last_login_time"] = now_time
+                    member_record["login_count"] = int(member_record.get("login_count", 0)) + 1
+                persistence.write(data, sha)
+
+            if not is_member:
+                if allowlisted_email or (developer_email and email == developer_email):
+                    access_type = "allowlisted_member" if allowlisted_email else "developer"
+                    record_login(access_type, "success")
+                    return jsonify({
+                        "member": True,
+                        "allowlisted_access": allowlisted_email,
+                        "developer_access": not allowlisted_email,
+                        "token": issue_token(email),
+                        "name": "",
+                        "message": "Member access confirmed.",
+                    }), 200
+                record_login("non_member", "not_member")
+                return jsonify({"member": False, "message": "We couldn't find an active membership for this email. Browse as a student or contact support if you believe this is a mistake."}), 403
+            if member_record and member_record.get("password_hash"):
+                password = payload.get("password", "")
+                if not isinstance(password, str) or not password_matches(
+                    password, member_record.get("password_salt", ""), member_record["password_hash"]
+                ):
+                    record_login("member", "invalid_password", member_record.get("name", ""))
+                    return jsonify({"error": "The email or password is incorrect."}), 401
+            member_name = member_record.get("name", "") if member_record else ""
+            record_login("member", "success", member_name)
         return jsonify({
             "member": True,
             "token": issue_token(email),
-            "name": member_record.get("name", "") if member_record else "",
+            "name": member_name,
             "message": "An active membership was found for this email.",
         }), 200
 
@@ -849,6 +1021,8 @@ def create_app(
                 None,
             )
             if not member:
+                if email in MEMBER_ACCESS_ALLOWLIST:
+                    return jsonify({"email": email, "name": "", "has_password": False})
                 return jsonify({"error": "An active member profile was not found."}), 404
             return jsonify({"email": email, "name": member.get("name", ""), "has_password": bool(member.get("password_hash"))})
 
@@ -869,7 +1043,10 @@ def create_app(
                 None,
             )
             if not member:
-                return jsonify({"error": "An active member profile was not found."}), 404
+                if email not in MEMBER_ACCESS_ALLOWLIST:
+                    return jsonify({"error": "An active member profile was not found."}), 404
+                member = {"id": secrets.token_urlsafe(12), "email": email, "is_member": True}
+                data["users"].append(member)
             if new_password:
                 if member.get("password_hash") and not password_matches(
                     current_password if isinstance(current_password, str) else "",
@@ -890,13 +1067,76 @@ def create_app(
         email = payload["email"].strip().lower()
         if "@" not in email:
             return jsonify({"error": "Enter a valid email address."}), 400
-        record = save_record("student_leads", {
-            "email": email,
-            "interest": str(payload.get("interest", "")).strip(),
-            "current_status": str(payload.get("current_status", "")).strip(),
-            "current_status_details": str(payload.get("current_status_details", "")).strip(),
+        interest = str(payload.get("interest", "")).strip()
+        current_status = str(payload.get("current_status", "")).strip()
+        current_status_details = str(payload.get("current_status_details", "")).strip()
+        with persistence_lock:
+            data, sha = persistence.read()
+            now = datetime.now(DISPLAY_TIME_ZONE)
+            now_date = now.strftime("%d %b %Y")
+            now_time = now.strftime("%I:%M %p")
+            existing = next(
+                (item for item in data["student_leads"] if item.get("email", "").strip().lower() == email),
+                None,
+            )
+            if existing is not None:
+                existing["visit_count"] = int(existing.get("visit_count", 1)) + 1
+                existing["last_visited_date"] = now_date
+                existing["last_visited_time"] = now_time
+                if interest:
+                    existing["interest"] = interest
+                if current_status:
+                    existing["current_status"] = current_status
+                if current_status_details:
+                    existing["current_status_details"] = current_status_details
+                record = existing
+            else:
+                record = {
+                    "id": secrets.token_urlsafe(12),
+                    "created_date": now_date,
+                    "created_time": now_time,
+                    "last_visited_date": now_date,
+                    "last_visited_time": now_time,
+                    "visit_count": 1,
+                    "email": email,
+                    "interest": interest,
+                    "current_status": current_status,
+                    "current_status_details": current_status_details,
+                }
+                data["student_leads"].append(record)
+            persistence.write(data, sha)
+            total_visitors = len(data["student_leads"])
+            total_visits = sum(int(item.get("visit_count", 1)) for item in data["student_leads"])
+        return jsonify({
+            "lead": record,
+            "total_visitors": total_visitors,
+            "total_visits": total_visits,
+        }), 201
+
+    @app.get("/api/admin/visitors")
+    def admin_visitors() -> Any:
+        require_admin()
+        data, _ = persistence.read()
+        leads = [
+            {
+                **lead,
+                "visit_count": int(lead.get("visit_count", 1)),
+                "last_visited_date": lead.get("last_visited_date") or lead.get("created_date", ""),
+                "last_visited_time": lead.get("last_visited_time") or lead.get("created_time", ""),
+            }
+            for lead in reversed(data["student_leads"])
+        ]
+        logins = list(reversed(data["member_logins"]))
+        return jsonify({
+            "student_leads": leads,
+            "member_logins": logins,
+            "summary": {
+                "unique_student_visitors": len(leads),
+                "total_student_visits": sum(item["visit_count"] for item in leads),
+                "total_logins": len(logins),
+                "successful_logins": sum(1 for item in logins if item.get("status") == "success"),
+            },
         })
-        return jsonify({"lead": record}), 201
 
     @app.post("/api/auth/admin-login")
     def admin_login() -> Any:
@@ -1063,6 +1303,238 @@ def create_app(
             response["notification_message"] = "Booking saved, but the team email could not be sent."
             response["notification_error"] = notification_error
         return jsonify(response), 201
+
+    @app.get("/api/payments/config")
+    def payments_config() -> Any:
+        key_id, _ = razorpay_credentials(env)
+        plans = payment_plans(env)
+        return jsonify({
+            "configured": bool(key_id),
+            "key_id": key_id,
+            "currency": env.get("RAZORPAY_CURRENCY", "INR").strip().upper() or "INR",
+            "plans": plans,
+        })
+
+    @app.post("/api/payments/razorpay/create-order")
+    def razorpay_create_order() -> Any:
+        key_id, key_secret = razorpay_credentials(env)
+        if not key_id or not key_secret:
+            raise ConfigurationError(
+                "Razorpay API keys are not configured yet. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to backend/.env."
+            )
+        payload = require_json({"email", "name"})
+        email = payload["email"].strip().lower()
+        name = payload["name"].strip()
+        if "@" not in email:
+            return jsonify({"error": "Enter a valid email address."}), 400
+        if len(name) > 120:
+            return jsonify({"error": "Name must be 120 characters or fewer."}), 400
+        plan_id = str(payload.get("plan_id", "ready-mock-preparation")).strip()
+        plans = payment_plans(env)
+        plan = next((item for item in plans if item["id"] == plan_id), None)
+        if plan is None:
+            return jsonify({"error": "Selected program plan is not valid."}), 400
+        preferred_time = str(payload.get("preferred_time", "")).strip()
+        if plan.get("requires_preferred_time") and not preferred_time:
+            return jsonify({"error": "Choose your preferred date and time for the mock interview."}), 400
+        payment_method = str(payload.get("payment_method", "upi")).strip().lower()
+        if payment_method not in {"upi", "card", "bank", "po"}:
+            return jsonify({"error": "payment_method must be one of upi, card, bank, or po"}), 400
+        promo_code = str(payload.get("promo_code", "")).strip().upper()
+        discount_percent = BOOKING_PROMO_CODES.get(promo_code, 0) if promo_code else 0
+        if promo_code and not discount_percent:
+            return jsonify({"error": "That booking code is not valid."}), 400
+
+        base_amount_inr = int(plan["amount_inr"])
+        final_amount_inr = round(base_amount_inr * (100 - discount_percent) / 100)
+        amount_paise = max(100, final_amount_inr * 100)
+        currency = plan["currency"]
+        receipt = f"adyant_{secrets.token_hex(8)}"
+
+        order = order_creator(
+            key_id,
+            key_secret,
+            amount_paise,
+            currency,
+            receipt,
+            {
+                "plan_id": plan["id"],
+                "plan_title": plan["title"],
+                "email": email,
+                "name": name,
+                "promo_code": promo_code,
+            },
+        )
+        order_id = str(order.get("id", "")).strip()
+        if not order_id:
+            raise RuntimeError("Razorpay did not return an order ID.")
+
+        record = save_record("bookings", {
+            "name": name,
+            "email": email,
+            "plan_id": plan["id"],
+            "amount_inr": final_amount_inr,
+            "currency": currency,
+            "preferred_time": preferred_time,
+            "payment_method": payment_method,
+            "promo_code": promo_code,
+            "discount_percent": discount_percent,
+            "razorpay_order_id": order_id,
+            "razorpay_payment_id": "",
+            "status": "pending_payment",
+        })
+        return jsonify({
+            "key_id": key_id,
+            "order": {
+                "id": order_id,
+                "amount": amount_paise,
+                "amount_inr": final_amount_inr,
+                "currency": currency,
+                "receipt": receipt,
+            },
+            "plan": plan,
+            "booking": record,
+        }), 201
+
+    def mark_booking_paid(
+        booking_id: str,
+        order_id: str,
+        payment_id: str,
+        source: str,
+    ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+        with persistence_lock:
+            data, sha = persistence.read()
+            booking_record = next(
+                (
+                    item for item in data["bookings"]
+                    if (booking_id and item.get("id") == booking_id)
+                    or (order_id and item.get("razorpay_order_id") == order_id)
+                ),
+                None,
+            )
+            if booking_record is None:
+                return None, None
+            now = datetime.now(DISPLAY_TIME_ZONE)
+            now_date = now.strftime("%d %b %Y")
+            now_time = now.strftime("%I:%M %p")
+            booking_record["status"] = "paid"
+            booking_record["razorpay_order_id"] = order_id or booking_record.get("razorpay_order_id", "")
+            booking_record["razorpay_payment_id"] = payment_id
+            booking_record["paid_date"] = now_date
+            booking_record["paid_time"] = now_time
+
+            existing_payment = next(
+                (item for item in data["payments"] if item.get("razorpay_payment_id") == payment_id),
+                None,
+            )
+            if existing_payment is None:
+                payment_record = {
+                    "id": secrets.token_urlsafe(12),
+                    "created_date": now_date,
+                    "created_time": now_time,
+                    "booking_id": booking_record.get("id", ""),
+                    "email": booking_record.get("email", ""),
+                    "name": booking_record.get("name", ""),
+                    "plan_id": booking_record.get("plan_id", "ready-mock-preparation"),
+                    "amount_inr": booking_record.get("amount_inr", 0),
+                    "currency": booking_record.get("currency", "INR"),
+                    "razorpay_order_id": booking_record.get("razorpay_order_id", ""),
+                    "razorpay_payment_id": payment_id,
+                    "status": "paid",
+                    "source": source,
+                }
+                data["payments"].append(payment_record)
+            else:
+                payment_record = existing_payment
+
+            learner_email = booking_record.get("email", "").strip().lower()
+            if learner_email:
+                existing_user = next(
+                    (user for user in data["users"] if user.get("email", "").strip().lower() == learner_email),
+                    None,
+                )
+                if existing_user is not None:
+                    existing_user["is_member"] = True
+                    if booking_record.get("name") and not existing_user.get("name"):
+                        existing_user["name"] = booking_record["name"]
+                else:
+                    data["users"].append({
+                        "id": secrets.token_urlsafe(12),
+                        "created_date": now_date,
+                        "created_time": now_time,
+                        "name": booking_record.get("name", ""),
+                        "username": learner_email.split("@")[0],
+                        "email": learner_email,
+                        "is_member": True,
+                    })
+            persistence.write(data, sha)
+        return booking_record, payment_record
+
+    @app.post("/api/payments/razorpay/verify")
+    def razorpay_verify_payment() -> Any:
+        _, key_secret = razorpay_credentials(env)
+        if not key_secret:
+            raise ConfigurationError(
+                "Razorpay API keys are not configured yet. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to backend/.env."
+            )
+        payload = require_json({"razorpay_order_id", "razorpay_payment_id", "razorpay_signature"})
+        order_id = str(payload["razorpay_order_id"]).strip()
+        payment_id = str(payload["razorpay_payment_id"]).strip()
+        signature = str(payload["razorpay_signature"]).strip()
+        booking_id = str(payload.get("booking_id", "")).strip()
+
+        if not verify_razorpay_payment_signature(order_id, payment_id, signature, key_secret):
+            return jsonify({"verified": False, "error": "Payment signature verification failed."}), 400
+
+        booking_record, payment_record = mark_booking_paid(booking_id, order_id, payment_id, "checkout_verify")
+        if booking_record is None:
+            return jsonify({"verified": False, "error": "Matching booking order was not found."}), 404
+
+        body = (
+            "A Razorpay payment has been verified and confirmed.\n\n"
+            f"Booking ID: {booking_record['id']}\n"
+            f"Plan: {booking_record.get('plan_id', 'ready-mock-preparation')}\n"
+            f"Name: {booking_record.get('name', 'Not provided')}\n"
+            f"Email: {booking_record.get('email', '')}\n"
+            f"Amount: {booking_record.get('currency', 'INR')} {booking_record.get('amount_inr', 0)}\n"
+            f"Razorpay Order ID: {order_id}\n"
+            f"Razorpay Payment ID: {payment_id}\n"
+            "Status: Paid (Member access activated)"
+        )
+        try:
+            send_support_email("Razorpay payment confirmed", body, booking_record.get("email") or None)
+        except (ConfigurationError, RuntimeError, ValueError):
+            pass
+
+        return jsonify({
+            "verified": True,
+            "booking": booking_record,
+            "payment": payment_record,
+            "message": "Payment verified and member access activated.",
+        }), 200
+
+    @app.post("/api/payments/razorpay/webhook")
+    def razorpay_webhook() -> Any:
+        webhook_secret = env.get("RAZORPAY_WEBHOOK_SECRET", "").strip()
+        if is_placeholder_secret(webhook_secret):
+            raise ConfigurationError("Set RAZORPAY_WEBHOOK_SECRET before enabling Razorpay webhooks.")
+        raw_body = request.get_data()
+        signature = request.headers.get("X-Razorpay-Signature", "").strip()
+        if not verify_razorpay_webhook_signature(raw_body, signature, webhook_secret):
+            return jsonify({"error": "Invalid Razorpay webhook signature."}), 400
+        event_payload = json.loads(raw_body.decode("utf-8") or "{}")
+        event_name = str(event_payload.get("event", "")).strip()
+        if event_name in {"payment.captured", "order.paid"}:
+            payment_entity = (
+                event_payload.get("payload", {})
+                .get("payment", {})
+                .get("entity", {})
+            )
+            order_id = str(payment_entity.get("order_id", "")).strip()
+            payment_id = str(payment_entity.get("id", "")).strip()
+            if order_id and payment_id:
+                mark_booking_paid("", order_id, payment_id, f"webhook:{event_name}")
+        return jsonify({"received": True, "event": event_name}), 200
 
     def save_record(collection: str, payload: dict[str, Any]) -> dict[str, Any]:
         with persistence_lock:

@@ -6,6 +6,8 @@ function SiteNav({ active, searchValue, onSearchChange, onSearchSubmit, coursesH
   const memberEmail = window.localStorage.getItem('adyant_member_email');
   const memberToken = window.localStorage.getItem('adyant_member_token');
   const isBrowsingAsStudent = window.localStorage.getItem('adyant_access_mode') === 'browse';
+  const isLoggedInMember = Boolean(memberEmail && memberToken && !isBrowsingAsStudent);
+  const interviewHref = isLoggedInMember ? mockHref : '/checkout';
   const currentSearch = searchValue ?? internalSearch;
 
   function handleSearchChange(event) {
@@ -30,7 +32,7 @@ function SiteNav({ active, searchValue, onSearchChange, onSearchSubmit, coursesH
         <a className={active === 'home' ? 'active' : ''} href="/home">Home</a>
         <a className={active === 'courses' ? 'active' : ''} href={coursesHref}>Courses</a>
         <a className={active === 'memberships' ? 'active' : ''} href="/membership">Memberships</a>
-        <a className={active === 'mock' ? 'active' : ''} href={mockHref}>Mock Interviews</a>
+        <a className={active === 'mock' ? 'active' : ''} href={interviewHref}>Mock Interviews</a>
         <a className={active === 'support' ? 'active' : ''} href="/support">Support</a>
       </nav>
 
@@ -39,7 +41,7 @@ function SiteNav({ active, searchValue, onSearchChange, onSearchSubmit, coursesH
           <button aria-label="Submit search" className="search-submit" type="submit">⌕</button>
           <input aria-label="Search programs" onChange={handleSearchChange} placeholder="Search programs..." type="search" value={currentSearch} />
         </form>
-        {showLogin && !isBrowsingAsStudent && (memberEmail && memberToken ? <a href="/student-portal" aria-label="Open your student profile">My profile</a> : <a href="/login">Member Login</a>)}
+        {showLogin && !isBrowsingAsStudent && (isLoggedInMember ? <a href="/student-portal" aria-label="Open your student profile">My profile</a> : <a href="/login">Member Login</a>)}
         {showCta && <a className="dark-button compact" href={ctaHref}>{ctaLabel}</a>}
       </div>
     </header>

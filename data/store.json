@@ -1,5 +1,15 @@
 {
-  "users": [],
+  "users": [
+    {
+      "id": "niMQ3-XOaE20SAV8",
+      "created_date": "28 Nov 2026",
+      "created_time": "01:06 PM",
+      "name": "Akash",
+      "username": "akashrbhat73",
+      "email": "akashrbhat73@gmail.com",
+      "is_member": true
+    }
+  ],
   "member_logins": [
     {
       "id": "YknVPRNLJZrQd59j",
@@ -91,11 +101,29 @@
       "promo_code": "",
       "discount_percent": 0,
       "razorpay_order_id": "order_U5VyzopW9emK61",
-      "razorpay_payment_id": "",
-      "status": "pending_payment"
+      "razorpay_payment_id": "pay_U5VzZGAQfCRiDA",
+      "status": "paid",
+      "paid_date": "28 Nov 2026",
+      "paid_time": "01:06 PM"
     }
   ],
-  "payments": [],
+  "payments": [
+    {
+      "id": "7Sh7Pc85FmxDg5ha",
+      "created_date": "28 Nov 2026",
+      "created_time": "01:06 PM",
+      "booking_id": "GUGdicvtMx2gX_Ns",
+      "email": "akashrbhat73@gmail.com",
+      "name": "Akash",
+      "plan_id": "ready-mock-preparation",
+      "amount_inr": 1999,
+      "currency": "INR",
+      "razorpay_order_id": "order_U5VyzopW9emK61",
+      "razorpay_payment_id": "pay_U5VzZGAQfCRiDA",
+      "status": "paid",
+      "source": "checkout_verify"
+    }
+  ],
   "videos": [],
   "programs": [],
   "cohorts": [],

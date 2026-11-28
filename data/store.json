@@ -7,7 +7,10 @@
       "name": "Akash",
       "username": "akashrbhat73",
       "email": "akashrbhat73@gmail.com",
-      "is_member": true
+      "is_member": true,
+      "last_login_date": "28 Nov 2026",
+      "last_login_time": "01:07 PM",
+      "login_count": 1
     }
   ],
   "member_logins": [
@@ -30,6 +33,16 @@
       "access_type": "allowlisted_member",
       "status": "success",
       "login_count": 2
+    },
+    {
+      "id": "3Emp6GbKhPEyPalc",
+      "created_date": "28 Nov 2026",
+      "created_time": "01:07 PM",
+      "email": "akashrbhat73@gmail.com",
+      "name": "Akash",
+      "access_type": "member",
+      "status": "success",
+      "login_count": 3
     }
   ],
   "student_leads": [

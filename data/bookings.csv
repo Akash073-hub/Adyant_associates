@@ -1,1 +1,1 @@
-id,created_date,created_time,name,email,preferred_time,payment_method,promo_code,discount_percent,status
+id,created_date,created_time,name,email,plan_id,amount_inr,currency,preferred_time,payment_method,promo_code,discount_percent,razorpay_order_id,razorpay_payment_id,status

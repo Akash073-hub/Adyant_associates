@@ -47,7 +47,25 @@
   "support_requests": [],
   "mock_interview_requests": [],
   "reset_requests": [],
-  "bookings": [],
+  "bookings": [
+    {
+      "id": "44k9P-qmK6YYvwi4",
+      "created_date": "28 Nov 2026",
+      "created_time": "12:26 PM",
+      "name": "Akash",
+      "email": "akashrbhat73@gmail.com",
+      "plan_id": "interview-preparation-guide",
+      "amount_inr": 2499,
+      "currency": "INR",
+      "preferred_time": "2026-11-18T12:26",
+      "payment_method": "upi",
+      "promo_code": "",
+      "discount_percent": 0,
+      "razorpay_order_id": "order_U5VK8Mv595I8OU",
+      "razorpay_payment_id": "",
+      "status": "pending_payment"
+    }
+  ],
   "payments": [],
   "videos": [],
   "programs": [],
